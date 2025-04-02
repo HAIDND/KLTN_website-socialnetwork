@@ -1,50 +1,92 @@
 function socketLiveStream(socket, io, liveRooms) {
-  // Khi một người tạo phòng live
-  socket.on("createRoom", ({ roomId, streamerName }) => {
+  const updateRooms = () =>
+    io.emit("updateLiveRooms", Object.values(liveRooms));
+
+  const handleCreateRoom = ({ owner, roomId, streamerName }) => {
     socket.join(roomId);
-    liveRooms[roomId] = { streamer: streamerName, viewers: [], id: roomId };
-    io.emit("updateLiveRooms", Object.values(liveRooms)); // Cập nhật danh sách phòng
-  });
+    liveRooms[roomId] = {
+      owner: owner,
+      id: roomId,
+      streamer: streamerName,
+      viewers: [],
+      startTime: new Date(),
+    };
+    updateRooms();
+    console.log("liveRooms", liveRooms);
+  };
 
-  // Khi một người vào xem live
-  socket.on("joinRoom", (roomId) => {
-    if (liveRooms[roomId]) {
+  const handleJoinRoom = (roomId) => {
+    const room = liveRooms[roomId];
+    if (room) {
       socket.join(roomId);
-      liveRooms[roomId].viewers.push(socket.id);
-      io.to(roomId).emit("viewerJoined", socket.id);
+      room.viewers.push({
+        id: socket.id,
+        joinTime: new Date(),
+      });
+      io.to(roomId).emit("viewerJoined", {
+        viewerId: socket.id,
+        count: room.viewers.length,
+      });
     }
-  });
+  };
 
-  // Khi một người rời phòng
-  socket.on("leaveRoom", (roomId) => {
+  const handleLeaveRoom = (roomId) => {
+    const room = liveRooms[roomId];
+    if (!room) return;
+
     socket.leave(roomId);
-    if (liveRooms[roomId]) {
-      liveRooms[roomId].viewers = liveRooms[roomId].viewers.filter(
-        (id) => id !== socket.id
-      );
-      if (liveRooms[roomId].viewers.length === 0 && socket.id === roomId) {
-        delete liveRooms[roomId]; // Xóa phòng nếu không còn ai
-      }
-      io.emit("updateLiveRooms", Object.values(liveRooms));
-    }
-  });
+    room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
 
-  // Khi một streamer kết thúc live
+    if (room.viewers.length === 0 && socket.id === roomId) {
+      delete liveRooms[roomId];
+    }
+    updateRooms();
+  };
+
+  const handleDisconnect = () => {
+    Object.keys(liveRooms).forEach((roomId) => {
+      const room = liveRooms[roomId];
+      room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
+
+      if (roomId === socket.id) {
+        delete liveRooms[roomId];
+        io.to(roomId).emit("streamEnded", { roomId });
+      }
+    });
+    updateRooms();
+  };
+  socket.on(
+    "liveChat",
+    ({ roomId, message, sender, senderName, timestamp }) => {
+      console.log("have chat", message);
+      io.to(roomId).emit("liveChat", {
+        roomId,
+        message,
+        sender,
+        senderName,
+        timestamp,
+      });
+    }
+  );
+  // Event listeners
+  socket.on("getLiveRooms", () => {
+    io.emit("updateLiveRooms", Object.values(liveRooms));
+  });
+  socket.on("createRoom", handleCreateRoom);
+  socket.on("joinRoom", handleJoinRoom);
+  socket.on("leaveRoom", handleLeaveRoom);
+  socket.on("userLogout", (roomId) => {
+    console.log("userLogout", roomId);
+    delete liveRooms[roomId];
+    io.to(roomId).emit("streamEnded", { roomId });
+    updateRooms();
+  });
   socket.on("endLive", (roomId) => {
     delete liveRooms[roomId];
-    io.emit("updateLiveRooms", Object.values(liveRooms));
+    io.to(roomId).emit("streamEnded", { roomId });
+    updateRooms();
   });
-
-  // Khi user ngắt kết nối
-  socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
-    for (let room in liveRooms) {
-      liveRooms[room].viewers = liveRooms[room].viewers.filter(
-        (id) => id !== socket.id
-      );
-      if (room === socket.id) delete liveRooms[room]; // Xóa phòng nếu streamer rời đi
-    }
-    io.emit("updateLiveRooms", Object.values(liveRooms));
-  });
+  socket.on("disconnect", handleDisconnect);
 }
+
 module.exports = socketLiveStream;

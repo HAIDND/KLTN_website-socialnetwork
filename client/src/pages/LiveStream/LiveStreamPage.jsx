@@ -1,5 +1,6 @@
 import { Grid } from "@mui/material";
 import LiveStreamCard from "./LiveStreamCard";
+import LiveStreamContainer from "./LiveStreamContainer";
 
 const LiveStreamGrid = ({ users }) => {
   return (
@@ -44,7 +45,8 @@ export default function LiveStreamPage() {
           justifyContent: "center",
         }}
       >
-        <LiveStreamGrid users={users} />
+        {/* <LiveStreamGrid users={users} /> */}
+        <LiveStreamContainer />
       </Grid>
     </Grid>
   );

@@ -20,6 +20,7 @@ import ChatVideoDemoUI from "~/pages/RealtimeFeature/ChatVideoDemoUI";
 import Livestream from "~/pages/LiveStream/LiveStreamPage";
 import Videocall from "~/components/VideoChat";
 import LiveStreamPage from "~/pages/LiveStream/LiveStreamPage";
+import LiveStreamRoom from "~/pages/LiveStream/LiveStreamRoom";
 
 export const routesArray = [
   ///public routes
@@ -63,6 +64,15 @@ export const routesArray = [
     element: (
       <PrivateRoute>
         <LiveStreamPage />
+      </PrivateRoute>
+    ),
+  },
+  // <Route path="/live/:roomId" element={<LiveStreamRoom />} />
+  {
+    path: "/livestream/:roomId",
+    element: (
+      <PrivateRoute>
+        <LiveStreamRoom />
       </PrivateRoute>
     ),
   },
