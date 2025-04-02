@@ -18,6 +18,7 @@ const corsOptions = {
 };
 
 const mongoose = require("mongoose");
+const setupSocket = require("./socket");
 
 dotenv.config();
 
@@ -61,72 +62,73 @@ app.use("/api/notification", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Socket.io event handling
-const users = {};
-//
-const onlineUsers = new Map();
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  io.emit("connection", socket.id);
-  socket.on("register", (userId) => {
-    onlineUsers.set(userId, socket.id);
-    console.log(`User ${userId} is online`);
-    users[userId] = socket.id;
-    console.log(`User ${userId} registered with socket ID ${socket.id}`);
-  });
-  //chat video
-  // socket.emit("socketId", socket.id);
-  socket.emit("socketId", socket.id);
+// const users = {};
+// //
+// const onlineUsers = new Map();
+// io.on("connection", (socket) => {
+//   console.log(`User connected: ${socket.id}`);
+//   io.emit("connection", socket.id);
+//   socket.on("register", (userId) => {
+//     onlineUsers.set(userId, socket.id);
+//     console.log(`User ${userId} is online`);
+//     users[userId] = socket.id;
+//     console.log(`User ${userId} registered with socket ID ${socket.id}`);
+//   });
+//   //chat video
+//   // socket.emit("socketId", socket.id);
+//   socket.emit("socketId", socket.id);
 
-  socket.on(
-    "initiateCall",
-    ({ targetId, signalData, senderId, senderName }) => {
-      io.to(targetId).emit("incomingCall", {
-        signal: signalData,
-        from: senderId,
-        name: senderName,
-      });
-    }
-  );
+//   // socket.on(
+//   //   "initiateCall",
+//   //   ({ targetId, signalData, senderId, senderName }) => {
+//   //     io.to(targetId).emit("incomingCall", {
+//   //       signal: signalData,
+//   //       from: senderId,
+//   //       name: senderName,
+//   //     });
+//   //   }
+//   // );
 
-  socket.on("changeMediaStatus", ({ mediaType, isActive }) => {
-    socket.broadcast.emit("mediaStatusChanged", {
-      mediaType,
-      isActive,
-    });
-  });
+//   // socket.on("changeMediaStatus", ({ mediaType, isActive }) => {
+//   //   socket.broadcast.emit("mediaStatusChanged", {
+//   //     mediaType,
+//   //     isActive,
+//   //   });
+//   // });
 
-  socket.on("sendMessage", ({ targetId, message, senderName }) => {
-    io.to(targetId).emit("receiveMessage", { message, senderName });
-  });
+//   // socket.on("sendMessage", ({ targetId, message, senderName }) => {
+//   //   io.to(targetId).emit("receiveMessage", { message, senderName });
+//   // });
 
-  socket.on("answerCall", (data) => {
-    socket.broadcast.emit("mediaStatusChanged", {
-      mediaType: data.mediaType,
-      isActive: data.mediaStatus,
-    });
-    io.to(data.to).emit("callAnswered", data);
-  });
+//   // socket.on("answerCall", (data) => {
+//   //   socket.broadcast.emit("mediaStatusChanged", {
+//   //     mediaType: data.mediaType,
+//   //     isActive: data.mediaStatus,
+//   //   });
+//   //   io.to(data.to).emit("callAnswered", data);
+//   // });
 
-  socket.on("terminateCall", ({ targetId }) => {
-    io.to(targetId).emit("callTerminated");
-  });
-  // Nhận tin nhắn từ user A gửi đến user B
-  socket.on("private_message", async ({ senderId, receiverId, message }) => {
-    const receiverSocketId = users[receiverId];
+//   // socket.on("terminateCall", ({ targetId }) => {
+//   //   io.to(targetId).emit("callTerminated");
+//   // });
+//   // Nhận tin nhắn từ user A gửi đến user B
+//   socket.on("private_message", async ({ senderId, receiverId, message }) => {
+//     const receiverSocketId = users[receiverId];
 
-    if (receiverSocketId) {
-      io.to(receiverSocketId).emit("private_message", { senderId, message });
-      console.log(`Message from ${senderId} to ${receiverId}: ${message}`);
-    } else {
-      console.log(`User ${receiverId} is offline.`);
-    }
-  });
+//     if (receiverSocketId) {
+//       io.to(receiverSocketId).emit("private_message", { senderId, message });
+//       console.log(`Message from ${senderId} to ${receiverId}: ${message}`);
+//     } else {
+//       console.log(`User ${receiverId} is offline.`);
+//     }
+//   });
 
-  socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
-
+//   socket.on("disconnect", () => {
+//     console.log(`User disconnected: ${socket.id}`);
+//   });
+// });
+// Initialize socket.io
+setupSocket(server);
 // Khởi động server
 server.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

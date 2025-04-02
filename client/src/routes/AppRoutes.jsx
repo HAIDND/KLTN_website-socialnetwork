@@ -2,7 +2,6 @@ import PublicRoute from "./PublicRouter";
 import PrivateRoute from "./PrivateRouter";
 import AdminRoute from "./AdminRouter";
 import HomePage from "../pages/Home";
-import ChatFriend from "../components/ChatFriend";
 import Newsfeed from "~/pages/NewFeed";
 import Profile from "~/pages/ProfileUsers";
 import FriendPage from "~/pages/Friends/FriendPage";
@@ -15,7 +14,12 @@ import DetailGroup from "~/pages/Group/DetailGroup";
 import SettingsPage from "~/pages/SettingsPage";
 import DeleteAccountDialog from "~/pages/SettingsPage/DeleteAccount";
 import EditProfile from "~/pages/SettingsPage/EditProfile";
-import RealtimeChat from "~/pages/RealtimeFeature/RealtimeChat";
+import PageNotFound from "~/pages/PageNotFound";
+import AdminPage from "~/pages/AdminPage";
+import ChatVideoDemoUI from "~/pages/RealtimeFeature/ChatVideoDemoUI";
+import Livestream from "~/pages/LiveStream/LiveStreamPage";
+import Videocall from "~/components/VideoChat";
+import LiveStreamPage from "~/pages/LiveStream/LiveStreamPage";
 
 export const routesArray = [
   ///public routes
@@ -50,7 +54,15 @@ export const routesArray = [
     path: "/chat",
     element: (
       <PrivateRoute>
-        <RealtimeChat />
+        <ChatVideoDemoUI />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/livestream",
+    element: (
+      <PrivateRoute>
+        <LiveStreamPage />
       </PrivateRoute>
     ),
   },
@@ -201,21 +213,21 @@ export const routesArray = [
       </PrivateRoute>
     ),
   },
-  // {
-  //   path: "*",
-  //   element: (
-  //     <PrivateRoute>
-  //       <PageNotFound />
-  //     </PrivateRoute>
-  //   ),
-  // },
-  // //admin rotes
-  // {
-  //   path: "/admin",
-  //   element: (
-  //     <AdminRoute>
-  //       <AdminPage />
-  //     </AdminRoute>
-  //   ),
-  // },
+  {
+    path: "*",
+    element: (
+      <PrivateRoute>
+        <PageNotFound />
+      </PrivateRoute>
+    ),
+  },
+  //admin rotes
+  {
+    path: "/admin",
+    element: (
+      <AdminRoute>
+        <AdminPage />
+      </AdminRoute>
+    ),
+  },
 ];

@@ -89,10 +89,8 @@
 // export default Videocall;
 
 import React, { useEffect, useRef, useState } from "react";
-import io from "socket.io-client";
+import socket from "~/context/SocketInitial";
 import Peer from "simple-peer";
-
-const socket = io("http://localhost:5000");
 
 const Videocall = () => {
   const [me, setMe] = useState("");

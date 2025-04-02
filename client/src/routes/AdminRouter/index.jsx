@@ -10,7 +10,7 @@ function AdminRoute({ children }) {
   const [isAdmin, SetAdmin] = useState();
 
   useEffect(() => {
-    readUser(curentUserID).then((data) => {
+    readUser(currentUser.userId).then((data) => {
       if (data) {
         console.log(data);
         setRole(data);
@@ -19,7 +19,7 @@ function AdminRoute({ children }) {
         alert("No role");
       }
     });
-    console.log(curentUserID);
+    console.log(currentUser.userId);
   }, [currentUser]);
   console.log(isrole);
   if (auth.isAuthenticated() && auth.isAdmin("admin")) return children;

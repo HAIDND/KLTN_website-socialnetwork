@@ -1,5 +1,5 @@
 import React, { useState, useContext } from "react";
-import { VideoCallContext } from "~/context/Context";
+
 // import { CopyToClipboard } from "react-copy-to-clipboard";
 import {
   Card,
@@ -14,12 +14,13 @@ import {
   Check as CheckIcon,
   Call as CallIcon,
 } from "@mui/icons-material";
+import { SocketContext } from "~/context/SocketContext";
 
 const FormCard = () => {
   const [idToCall, setIdToCall] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const { name, setName, myUserId, callUser, isCallAccepted } =
-    useContext(VideoCallContext);
+    useContext(SocketContext);
 
   const handleCopyClick = () => {
     setIsCopied(true);

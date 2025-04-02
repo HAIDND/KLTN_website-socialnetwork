@@ -75,24 +75,30 @@ exports.getMessages = async (req, res) => {
     const { userId } = req.params; // Lấy ID người dùng từ URL
     const currentUserId = req.userId; // Lấy userId của người dùng hiện tại từ middleware xác thực
     // Chuyển đổi sang số nguyên
-    const pageNumber = parseInt(page, 10);
-    const limitNumber = parseInt(limit, 10);
-    const skip = (pageNumber - 1) * limitNumber;
+    // const pageNumber = parseInt(page, 10);
+    // const limitNumber = parseInt(limit, 10);
+    // const skip = (pageNumber - 1) * limitNumber;
     // Tìm tất cả tin nhắn giữa người dùng hiện tại và người dùng khác
     const messages = await Message.find({
       $or: [
         { senderId: currentUserId, receiverId: userId },
         { senderId: userId, receiverId: currentUserId },
       ],
-    })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limitNumber); // Sắp xếp theo thời gian gửi (cũ nhất trước)
+    }).sort({ createdAt: 1 });
+    // .skip(skip)
+    // .limit(limitNumber); // Sắp xếp theo thời gian gửi (cũ nhất trước)
     // Định dạng lại createdAt của mỗi tin nhắn
+
     const formattedMessages = messages.map((message) => {
+      let formatTime;
+      if (message.senderId.toString() === currentUserId) {
+        formatTime = moment(message.createdAt).fromNow();
+      } else {
+        formatTime = moment(message.createdAt).format("YYYY-MM-DD");
+      }
       return {
         ...message.toObject(),
-        createdAt: moment(message.createdAt).fromNow(), // Định dạng ngày giờ
+        createdAt: formatTime, // moment(message.createdAt).fromNow() , // Định dạng ngày giờ
       };
     });
 

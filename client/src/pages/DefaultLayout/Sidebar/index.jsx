@@ -15,6 +15,7 @@ import {
   Settings as SettingsIcon,
   People as PeopleIcon,
   Chat,
+  Camera,
 } from "@mui/icons-material"; // Import icon từ MUI
 
 // Import context
@@ -34,6 +35,7 @@ const Sidebar = () => {
     { title: "Groups", path: "/groups", icon: <GroupIcon /> },
     { title: "Settings", path: "/settings", icon: <SettingsIcon /> },
     { title: "ChatRealtime", path: "/chat", icon: <Chat /> },
+    { title: "Live stream", path: "/livestream", icon: <Camera /> },
   ];
   console.log(currentUser);
   console.log(currentUserInfo);

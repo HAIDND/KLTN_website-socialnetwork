@@ -16,7 +16,7 @@ import { Edit, Delete } from "@mui/icons-material";
 import EditUserDialog from "~/pages/SettingsPage/EditProfile"; // Dialog chỉnh sửa
 import AdminSelect from "./AdminSelect";
 import { adminDeleteUser } from "~/services/AdminServices/adminUserService";
-import YesNoDialog from "../YesNoDialog";
+import YesNoDialog from "~/components/Elements/YesNoDialog";
 
 const AdminTable = ({ api, columns, reload, hanldeReload }) => {
   const [data, setData] = useState([]);

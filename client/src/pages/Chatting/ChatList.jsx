@@ -13,7 +13,8 @@ import { styled } from "@mui/material/styles";
 import ChatWindow from "./ChatWindow";
 import { getChatList } from "~/services/chatServices/chatService";
 import { getListFriend } from "~/services/friendServices/friendService";
-
+import { VideoCallProvider } from "~/context/VideoCallContext";
+import MailIcon from "@mui/icons-material/Mail";
 const ChatListContainer = styled(Box)(({ theme }) => ({
   position: "fixed",
   right: 0,
@@ -64,13 +65,12 @@ const ChatList = () => {
   return (
     <ChatListContainer>
       <Typography
-        variant="span"
+        variant="body1"
         gutterBottom
         sx={{ textAlign: "center", fontWeight: "bold" }}
       >
         Chat List
       </Typography>
-
       <List sx={{ paddingTop: 2 }}>
         {chats.map((chat) => (
           <ListItem

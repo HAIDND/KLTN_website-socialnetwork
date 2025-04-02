@@ -2,9 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { Close, Comment } from "@mui/icons-material";
 
-const key = "AIzaSyAUexRDsO6x5o6mht9jjumvzaG5MMny6ho";
+const key = "AIzaSyCvMg5djW9P_0Rkh2FeuIOygP-YIf7onLE";
 
 const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${key}`;
+const systemMessage = {
+  role: "user",
+  parts: [
+    {
+      text: "You are a friendly and helpful chatbot. Try to give concise and engaging responses.Let's answer by Vietnamese!",
+    },
+  ],
+};
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,27 +21,9 @@ const Chatbot = () => {
   const [chatHistory, setChatHistory] = useState([
     {
       role: "model",
-      text: "Chào bạn, tôi là trợ lý media social về du lịch của bạn. Bạn có câu hỏi gì về du lịch không?",
+      text: "Hello, how can I help you today?",
     },
   ]);
-
-  const tourismKeywords = [
-    "mạng xã hội",
-    "khách sạn",
-    "tour du lịch",
-    "ẩm thực",
-    "visa",
-    "vé máy bay",
-    "du lịch",
-    "lữ hành",
-  ]; // Thêm các từ khóa liên quan đến du lịch
-
-  const isTourismRelated = (question) => {
-    const lowercaseQuestion = question.toLowerCase();
-    return tourismKeywords.some((keyword) =>
-      lowercaseQuestion.includes(keyword)
-    );
-  };
 
   const updateHistory = (text) => {
     setChatHistory((prev) => [
@@ -59,10 +49,13 @@ const Chatbot = () => {
 
   const generateResponse = async (history) => {
     try {
-      history = history.map(({ role, text }) => ({
-        role,
-        parts: [{ text }],
-      }));
+      history = [
+        systemMessage,
+        ...history.map(({ role, text }) => ({
+          role,
+          parts: [{ text }],
+        })),
+      ];
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -77,14 +70,7 @@ const Chatbot = () => {
       const apiResponseText = data.candidates[0].content.parts[0].text
         .replace(/\*\*(.*?)\*\*/g, "$1")
         .trim();
-      const userQuestion = history[history.length - 1].parts[0].text; // Lấy câu hỏi của người dùng
-      if (isTourismRelated(userQuestion)) {
-        updateHistory(apiResponseText);
-      } else {
-        updateHistory(
-          "Xin lỗi, tôi chỉ có thể trả lời các câu hỏi liên quan đến du lịch."
-        );
-      }
+      updateHistory(apiResponseText);
     } catch (error) {
       console.error("Error generating response:", error);
     }
@@ -103,7 +89,7 @@ const Chatbot = () => {
         <Comment />
       </div>
       <div className="wrapper" style={{ display: isOpen ? "block" : "none" }}>
-        <div className="title">Trợ lý Du lịch</div>
+        <div className="title">Social Chatbot</div>
         <Close
           style={{
             position: "absolute",
@@ -140,10 +126,10 @@ const Chatbot = () => {
             <input
               ref={inputRef}
               type="text"
-              placeholder="Nhập câu hỏi của bạn"
+              placeholder="Type your message"
               required
             />
-            <button onClick={handleFormSubmit}>Gửi</button>
+            <button onClick={handleFormSubmit}>Send</button>
           </div>
         </div>
       </div>

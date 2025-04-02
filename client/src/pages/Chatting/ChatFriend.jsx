@@ -4,7 +4,6 @@ import { Box, Button, Grid, Input } from "@mui/material";
 import { LogoDev } from "@mui/icons-material";
 import { CurentUser } from "~/MainRoutes";
 import { SocketContext } from "~/context/SocketContext";
-// const socket = io(`http://localhost:5000`);
 
 function ChatFriend() {
   const socket = useContext(SocketContext);

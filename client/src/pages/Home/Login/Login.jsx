@@ -11,9 +11,11 @@ import { login } from "~/services/authService/authService";
 import auth from "~/services/authService/authHelper";
 import { CurrentUser } from "../../../routes/GlobalContext";
 import { readUser } from "../../../services/userServices/userService";
-import socket from "~/context/socket";
+// import socket from "~/context/socket";
+import { SocketContext } from "~/context/SocketContext";
 
 export default function Login() {
+  const { LoginSocket } = useContext(SocketContext);
   const { currentUserInfo, currentUser, setCurrentUser, setCurrentUserInfo } =
     useContext(CurrentUser);
   const navigate = useNavigate();
@@ -40,11 +42,13 @@ export default function Login() {
         } else {
           setCurrentUser(data);
           //connect to server
-          socket.connect();
-          socket.emit("register", data.userId);
+          // socket.connect();
+          // socket.emit("userLogin", data.userId);
+
           //read user data
           readUser(data.userId).then((sss) => {
             if (sss) {
+              LoginSocket(sss.email);
               setCurrentUserInfo(sss);
             } else {
               alert("No profile");

@@ -10,20 +10,33 @@ import {
   Call,
 } from "@mui/icons-material";
 import { CurrentUser } from "~/routes/GlobalContext";
-import Peer from "simple-peer";
 import Video from "./Video/Video";
 import FormCard from "./FormCard/FormCard";
 import IncomingCall from "./IncomingCall/IncomingCall";
-import { VideoCallProvider } from "~/context/Context";
+import {
+  VideoCallContext,
+  VideoCallProvider,
+} from "~/context/VideoCallContext";
+import ChatVideoDemoUI from "../RealtimeFeature/ChatVideoDemoUI";
+import HaveChatVideo from "../RealtimeFeature/HaveChatVideo";
 
-const CallVideos = ({ friendCall }) => {
+const CallVideos = ({ children, friendCall }) => {
+  const { isCalling, isCallAccepted } = useContext(VideoCallContext);
+  useEffect(() => {
+    console.log("rendervideocall");
+  }, [isCallAccepted, isCalling]);
   return (
-    <VideoCallProvider>
-      {" "}
-      <Video />
-      <FormCard />
-      <IncomingCall />
-    </VideoCallProvider>
+    <>
+      {(isCalling || isCallAccepted) && (
+        <>
+          {/* <Video /> */}
+          <ChatVideoDemoUI />
+          {children}
+        </>
+      )}
+      {/* <IncomingCall /> */}
+      <HaveChatVideo />
+    </>
   );
 };
 

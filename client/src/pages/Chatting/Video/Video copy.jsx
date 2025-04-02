@@ -1,19 +1,9 @@
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
+import { Grid, Paper, Avatar, Button } from "@mui/material";
+
 import Loading from "../Loading/Loading";
 import { VideoCallContext } from "~/context/VideoCallContext";
-import "./Video.css";
-import {
-  MdMic,
-  MdMicOff,
-  MdVideocam,
-  MdVideocamOff,
-  MdCallEnd,
-  MdOutlineMessage,
-  MdIosShare,
-} from "react-icons/md";
-import { Button, Col, Row } from "react-bootstrap";
-import { Avatar } from "antd";
-import { FaUserLarge, FaVolumeXmark } from "react-icons/fa6";
+
 const Video = ({ userId, friendId }) => {
   const {
     call,
@@ -34,10 +24,9 @@ const Video = ({ userId, friendId }) => {
     toggleFullScreen,
     toggleScreenSharingMode,
     toggleModal,
-    callUser,
     hasUnreadMessages,
   } = useContext(VideoCallContext);
-  const [friendID, setFriendID] = useState();
+
   return (
     <div className="fullscreen-call-container">
       <Row>
@@ -125,7 +114,6 @@ const Video = ({ userId, friendId }) => {
           <Button onClick={toggleMicrophone} className="video-control-btn">
             {isMyMicActive ? <MdMic size={25} /> : <MdMicOff size={25} />}
           </Button>
-
           <Button onClick={toggleVideo} className="video-control-btn">
             {isMyVideoActive ? (
               <MdVideocam size={25} />
@@ -133,12 +121,12 @@ const Video = ({ userId, friendId }) => {
               <MdVideocamOff size={25} />
             )}
           </Button>
-          {/* <input
+          <input
             type="text"
             value={friendID}
             onChange={(e) => setFriendID(e.target.value)}
           />
-          <Button onClick={() => callUser(friendID)}>Call</Button> */}
+          <Button onClick={() => callUser(friendID)}>Call</Button>
           {isCallAccepted && !isCallEnded && (
             <>
               <Button
@@ -147,12 +135,10 @@ const Video = ({ userId, friendId }) => {
               >
                 <MdIosShare size={23} />
               </Button>
-
               <Button className="video-control-btn" onClick={toggleModal}>
                 <MdOutlineMessage size={22} />
                 {hasUnreadMessages && <div className="notification-dot" />}
               </Button>
-
               <Button className="decline-call-btn" onClick={endCall}>
                 <MdCallEnd size={22} />
               </Button>

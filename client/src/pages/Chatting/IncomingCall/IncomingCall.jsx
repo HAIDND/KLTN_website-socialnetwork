@@ -1,13 +1,10 @@
 import React, { useContext, useState, useEffect, useRef } from "react";
 import answercall from "~/assets/answer-call.gif";
-import { VideoCallContext } from "~/context/Context";
-// import { Button, Modal } from "react-bootstrap";
-// import { MdCallEnd } from "react-icons/md";
+import { VideoCallContext } from "~/context/VideoCallContext";
 import ringtone from "~/assets/ringtone.ogg";
 import "./IncomingCall.css";
-import { Button, Modal } from "@mui/material";
-import { CallEnd } from "@mui/icons-material";
-
+import { Dialog, DialogTitle, DialogActions, Button } from "@mui/material";
+import { MdCallEnd } from "react-icons/md";
 const IncomingCall = () => {
   const {
     receiveCall,
@@ -51,21 +48,26 @@ const IncomingCall = () => {
   return (
     <>
       <audio src={ringtone} loop ref={audioRef} />
-      <Modal show={showModal} onHide={handleClose} centered>
-        <Modal.Header className="call-modal-header" closeButton>
-          <Modal.Title className="call-modal-title">
-            {call.name ? call.name : "Someone"} is calling:
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Footer className="call-modal-footer">
-          <Button onClick={handleClose} className="decline-call-btn">
-            <CallEnd size={25} />
+
+      <Dialog open={showModal} onClose={handleClose} fullWidth maxWidth="xs">
+        <DialogTitle className="call-modal-header">
+          {call.name ? call.name : "Someone"} is calling:
+        </DialogTitle>
+
+        <DialogActions className="call-modal-footer">
+          <Button
+            onClick={handleClose}
+            variant="contained"
+            color="error"
+            className="decline-call-btn"
+          >
+            <MdCallEnd size={25} />
           </Button>
           <div className="answer-call-image" onClick={handleCallAnswer}>
             <img src={answercall} alt="Answer Call" />
           </div>
-        </Modal.Footer>
-      </Modal>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

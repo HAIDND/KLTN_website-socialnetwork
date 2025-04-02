@@ -1,12 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import io from "socket.io-client";
 import Peer from "simple-peer";
 import { Box, Button, Grid, Input } from "@mui/material";
 import { LogoDev } from "@mui/icons-material";
-
-const socket = io(`http://localhost:5000`);
+import { SocketContext } from "~/context/SocketContext";
 
 function ChatFriend() {
+  const { socket } = useContext(SocketContext);
   const [userID, setUserID] = useState("");
   const [receiverId, setReceiverId] = useState("");
   const [message, setMessage] = useState("");

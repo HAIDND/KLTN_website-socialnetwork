@@ -26,9 +26,12 @@ import SearchComponent from "./SearchComponent";
 import NotificationPanel from "./Notifi";
 import ChatList from "~/pages/Chatting/ChatList";
 import ThemeSettings from "./ThemeSettings";
+import { SocketContext } from "~/context/SocketContext";
+
 // import SidebarMobile from "./SideBarMobile";
 
 const Header = () => {
+  const { LogoutSocket } = useContext(SocketContext);
   const {
     currentUser,
     setCurrentUser,
@@ -59,6 +62,7 @@ const Header = () => {
     sessionStorage.removeItem("darkMode");
     sessionStorage.removeItem("themeColor");
     sessionStorage.removeItem("themeSecondary");
+    LogoutSocket(currentUserInfo?.email);
     logout();
     navigate("/login");
   }, [navigate]);
@@ -174,7 +178,6 @@ const Header = () => {
           </IconButton>
         </Box>
       </Toolbar>
-
       {chatListOpen && <ChatList />}
     </AppBar>
   );

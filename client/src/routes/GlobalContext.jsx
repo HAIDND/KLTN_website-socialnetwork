@@ -2,6 +2,7 @@ import { createContext, useState } from "react";
 import GlobalTheme from "./GlobalTheme";
 import { createTheme, useMediaQuery } from "@mui/material";
 import { SocketProvider } from "~/context/SocketContext";
+import { VideoCallProvider } from "~/context/VideoCallContext";
 
 export const CurrentUser = createContext();
 export default function GlobalContext({ children }) {
@@ -10,7 +11,7 @@ export default function GlobalContext({ children }) {
   const [currentUserInfo, setCurrentUserInfo] = useState(null);
   // Theme settings
   const [primaryColor, setPrimaryColor] = useState(
-    sessionStorage.getItem("primaryColor") || "#2f3"
+    sessionStorage.getItem("primaryColor") || "#2f3f"
   );
   const [secondaryColor, setSecondaryColor] = useState(
     sessionStorage.getItem("secondaryColor") || "#FFB347"
@@ -43,8 +44,11 @@ export default function GlobalContext({ children }) {
         isMobile,
       }}
     >
-      <SocketProvider userId={currentUser.userId}>
-        <GlobalTheme theme={theme}>{children}</GlobalTheme>
+      <SocketProvider userId={currentUserInfo?.userId}>
+        {" "}
+        <VideoCallProvider>
+          <GlobalTheme theme={theme}>{children}</GlobalTheme>
+        </VideoCallProvider>
       </SocketProvider>
     </CurrentUser.Provider>
   );

@@ -12,8 +12,6 @@ import {
 import { CurrentUser } from "~/routes/GlobalContext";
 import Peer from "simple-peer";
 
-// const socket = io("http://localhost:5000");
-
 const CallVideos = ({ friendCall }) => {
   const { currentUserInfo } = useContext(CurrentUser);
   const [stream, setStream] = useState(null);

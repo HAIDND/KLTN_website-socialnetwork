@@ -1,18 +1,44 @@
-import React, { useState, useEffect, useRef, createContext } from "react";
-// import { socket } from "~/config/apiConfig";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import sockets from "./SocketInitial"; // Import socket từ file trên
+import { CurrentUser } from "~/routes/GlobalContext";
+import { audio } from "~/assets/RingNotifi/audioNotifi";
 import Peer from "simple-peer";
-import { SocketContext } from "./SocketContext";
-const VideoCallContext = createContext();
+import CallVideos from "~/pages/Chatting/CallVideos";
+export const SocketContext = createContext();
 
-const VideoCallProvider = ({ children }) => {
-  const socket = useContext(SocketContext);
-  const [userStream, setUserStream] = useState(null);
+export const SocketProvider = ({ children, userId }) => {
+  const socket = sockets;
+  socket.connect();
+  const { currentUserInfo } = useContext(CurrentUser);
+  const [haveNewMess, setHaveNewMess] = useState(true);
+
+  const LoginSocket = (userId) => {
+    socket.emit("userLogin", userId);
+  };
+  const LogoutSocket = (userId) => {
+    socket.emit("userLogin", userId);
+  };
+
+  //efectnotifi mess
+  useEffect(() => {
+    const handleListenMessage = ({ senderId, message }) => {
+      console.log("new mess is " + message);
+      audio.play();
+    };
+    socket.on("private_message", handleListenMessage);
+    return () => {
+      socket.off("private_message");
+    };
+  }, [haveNewMess]);
+
+  ////context video call
+  const [userStream, setUserStream] = useState(null); ///
   const [call, setCall] = useState({});
   const [isCallAccepted, setIsCallAccepted] = useState(false);
   const [isCallEnded, setIsCallEnded] = useState(false);
   const [myUserId, setMyUserId] = useState("");
   const [partnerUserId, setPartnerUserId] = useState("");
-  const [chatMessages, setChatMessages] = useState([]);
+
   const [receivedMessage, setReceivedMessage] = useState("");
   const [name, setName] = useState("");
   const [opponentName, setOpponentName] = useState("");
@@ -31,7 +57,7 @@ const VideoCallProvider = ({ children }) => {
     const getUserMediaStream = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+          video: false,
           audio: true,
         });
         setUserStream(stream);
@@ -266,8 +292,13 @@ const VideoCallProvider = ({ children }) => {
   };
 
   return (
-    <VideoCallContext.Provider
+    <SocketContext.Provider
       value={{
+        socket,
+        LoginSocket,
+        LogoutSocket,
+        setHaveNewMess,
+        haveNewMess,
         call,
         isCallAccepted,
         myVideoRef,
@@ -282,8 +313,6 @@ const VideoCallProvider = ({ children }) => {
         receiveCall,
         sendMessage,
         receivedMessage,
-        chatMessages,
-        setChatMessages,
         setReceivedMessage,
         setPartnerUserId,
         endIncomingCall,
@@ -301,9 +330,8 @@ const VideoCallProvider = ({ children }) => {
         toggleFullScreen,
       }}
     >
+      {/* {userStream && <CallVideos />} */}
       {children}
-    </VideoCallContext.Provider>
+    </SocketContext.Provider>
   );
 };
-
-export { VideoCallContext, VideoCallProvider };
