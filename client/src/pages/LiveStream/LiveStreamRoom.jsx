@@ -22,9 +22,12 @@ import {
   People,
   Close,
   Send,
+  CallEnd,
+  ExitToApp,
 } from "@mui/icons-material";
 import { SocketContext } from "~/context/SocketContext";
 import { CurrentUser } from "~/routes/GlobalContext";
+import { VideoCallContext } from "~/context/VideoCallContext";
 
 const LiveStreamRoom = () => {
   const { roomId } = useParams();
@@ -43,15 +46,25 @@ const LiveStreamRoom = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [viewers, setViewers] = useState([]);
+  // Add these after existing useRef declarations
+  const peerRef = useRef();
+  const streamRef = useRef();
+  const [stream, setStream] = useState(null);
 
+  // Add these after existing useState declarations
+  const [peers, setPeers] = useState({});
+  const [error, setError] = useState(null);
+  const { startLiveStream, joinLiveStream, myVideoRef, partnerVideoRef } =
+    useContext(VideoCallContext);
   useEffect(() => {
     // Join room
     socket.emit("joinRoom", roomId);
-
+    joinLiveStream(roomId);
     // Get room info
     socket.on("roomInfo", (info) => {
+      console.log(info);
       setRoomInfo(info);
-      setIsStreamer(info.streamerId === currentUserInfo?._id);
+      setIsStreamer(info.owner === currentUserInfo?.email);
     });
 
     // Handle new viewer
@@ -71,12 +84,27 @@ const LiveStreamRoom = () => {
 
     return () => {
       socket.emit("leaveRoom", roomId);
+      if (isStreamer) {
+        socket.emit("endLive", roomId);
+      }
       socket.off("roomInfo");
       socket.off("viewerJoined");
       socket.off("viewerLeft");
       socket.off("streamEnded");
     };
   }, [roomId, socket]);
+  //handle viewer leave room
+  function handleViewerLeftRoom() {
+    socket.emit("leaveRoom", roomId);
+    navigate("/livestream");
+  }
+  //handle viewer leave room
+  function handleOwnerEndRoom() {
+    if (confirm("Are you sure you want to end the stream?"))
+      socket.emit("endLive", roomId);
+    else return 0;
+  }
+
   // Handle stream liev chat
   socket.on(
     "liveChat",
@@ -108,24 +136,254 @@ const LiveStreamRoom = () => {
     console.log("have new chat");
     setNewMessage("");
   };
+  // Add this after the existing useEffect hooks
+  useEffect(() => {
+    if (isStreamer) {
+      // Get user media for streamer
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: true })
+        .then((mediaStream) => {
+          streamRef.current = mediaStream;
+          setStream(mediaStream);
+          if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream;
+          }
 
+          // Notify server that stream is ready
+          socket.emit("streamReady", { roomId });
+        })
+        .catch((err) => {
+          console.error("Failed to get media devices:", err);
+          setError("Failed to access camera and microphone");
+        });
+    }
+
+    // Handle new viewer connection
+    socket.on("viewerConnected", ({ viewerId }) => {
+      if (!isStreamer) return;
+
+      const peer = new RTCPeerConnection({
+        iceServers: [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:global.stun.twilio.com:3478" },
+        ],
+      });
+
+      // Add tracks to peer connection
+      streamRef.current.getTracks().forEach((track) => {
+        peer.addTrack(track, streamRef.current);
+      });
+
+      // Handle ICE candidates
+      peer.onicecandidate = (event) => {
+        if (event.candidate) {
+          socket.emit("iceCandidate", {
+            candidate: event.candidate,
+            viewerId,
+            roomId,
+          });
+        }
+      };
+
+      // Create and send offer
+      peer
+        .createOffer()
+        .then((offer) => peer.setLocalDescription(offer))
+        .then(() => {
+          socket.emit("streamOffer", {
+            offer: peer.localDescription,
+            viewerId,
+            roomId,
+          });
+        });
+
+      setPeers((prev) => ({ ...prev, [viewerId]: peer }));
+    });
+
+    // Handle viewer disconnection
+    socket.on("viewerDisconnected", ({ viewerId }) => {
+      if (peers[viewerId]) {
+        peers[viewerId].close();
+        setPeers((prev) => {
+          const newPeers = { ...prev };
+          delete newPeers[viewerId];
+          return newPeers;
+        });
+      }
+    });
+
+    return () => {
+      // Cleanup
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+      Object.values(peers).forEach((peer) => peer.close());
+      socket.off("viewerConnected");
+      socket.off("viewerDisconnected");
+    };
+  }, [isStreamer, roomId]);
+
+  // Add viewer connection logic
+  useEffect(() => {
+    if (isStreamer) return;
+
+    const peer = new RTCPeerConnection({
+      iceServers: [
+        { urls: "stun:stun.l.google.com:19302" },
+        { urls: "stun:global.stun.twilio.com:3478" },
+      ],
+    });
+
+    // Handle incoming stream
+    peer.ontrack = (event) => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = event.streams[0];
+      }
+    };
+
+    // Handle ICE candidates
+    peer.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit("iceCandidate", {
+          candidate: event.candidate,
+          roomId,
+          streamerId: roomInfo?.streamerId,
+        });
+      }
+    };
+
+    // Handle offer from streamer
+    socket.on("streamOffer", async ({ offer }) => {
+      await peer.setRemoteDescription(new RTCSessionDescription(offer));
+      const answer = await peer.createAnswer();
+      await peer.setLocalDescription(answer);
+
+      socket.emit("streamAnswer", {
+        answer,
+        roomId,
+        streamerId: roomInfo?.streamerId,
+      });
+    });
+
+    // Handle ICE candidates
+    socket.on("iceCandidate", async ({ candidate }) => {
+      try {
+        await peer.addIceCandidate(new RTCIceCandidate(candidate));
+      } catch (err) {
+        console.error("Error adding ICE candidate:", err);
+      }
+    });
+
+    peerRef.current = peer;
+
+    return () => {
+      if (peer) {
+        peer.close();
+      }
+      socket.off("streamOffer");
+      socket.off("iceCandidate");
+    };
+  }, [!isStreamer && roomInfo?.streamerId]);
+  // Add these after existing state declarations
+  const toggleMic = () => {
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = !isMicActive;
+        setIsMicActive(!isMicActive);
+      }
+    }
+  };
+
+  const toggleVideo = () => {
+    if (streamRef.current) {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = !isVideoActive;
+        setIsVideoActive(!isVideoActive);
+      }
+    }
+  };
+
+  const toggleScreenShare = async () => {
+    try {
+      if (!isScreenSharing) {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+        });
+
+        const videoTrack = displayStream.getVideoTracks()[0];
+
+        Object.values(peers).forEach((peer) => {
+          const sender = peer
+            .getSenders()
+            .find((s) => s.track.kind === "video");
+          if (sender) {
+            sender.replaceTrack(videoTrack);
+          }
+        });
+
+        videoTrack.onended = () => {
+          toggleScreenShare();
+        };
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = displayStream;
+        }
+      } else {
+        const userStream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        const videoTrack = userStream.getVideoTracks()[0];
+
+        Object.values(peers).forEach((peer) => {
+          const sender = peer
+            .getSenders()
+            .find((s) => s.track.kind === "video");
+          if (sender) {
+            sender.replaceTrack(videoTrack);
+          }
+        });
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = userStream;
+        }
+      }
+      setIsScreenSharing(!isScreenSharing);
+    } catch (err) {
+      console.error("Error sharing screen:", err);
+    }
+  };
   return (
     <Box sx={{ height: "100vh", display: "flex" }}>
       {/* Main Content */}
       <Box sx={{ flex: 1, display: "flex", flexDirection: "column" }}>
         {/* Video Area */}
         <Box sx={{ flex: 1, bgcolor: "black", position: "relative" }}>
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted={isStreamer}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "contain",
-            }}
-          />
+          {isStreamer ? (
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted={isStreamer}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
+          ) : (
+            <video
+              ref={partnerVideoRef}
+              autoPlay
+              playsInline
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+              }}
+            />
+          )}
 
           {/* Stream Info Overlay */}
           <Box
@@ -158,7 +416,35 @@ const LiveStreamRoom = () => {
           </Box>
 
           {/* Streamer Controls */}
-          {isStreamer && (
+          {isStreamer ? (
+            <Stack
+              direction="row"
+              spacing={1}
+              sx={{
+                position: "absolute",
+                bottom: 16,
+                left: "50%",
+                transform: "translateX(-50%)",
+                bgcolor: "rgba(0,0,0,0.6)",
+                borderRadius: 2,
+                p: 1,
+              }}
+            >
+              {/* // Update the control buttons section */}
+              <IconButton onClick={toggleMic} sx={{ color: "white" }}>
+                {isMicActive ? <Mic /> : <MicOff color="error" />}
+              </IconButton>
+              <IconButton onClick={toggleVideo} sx={{ color: "white" }}>
+                {isVideoActive ? <Videocam /> : <VideocamOff color="error" />}
+              </IconButton>
+              <IconButton onClick={toggleScreenShare} sx={{ color: "white" }}>
+                {isScreenSharing ? <StopScreenShare /> : <ScreenShare />}
+              </IconButton>
+              <IconButton onClick={handleOwnerEndRoom} sx={{ color: "white" }}>
+                {isScreenSharing ? <CallEnd /> : <CallEnd />}
+              </IconButton>
+            </Stack>
+          ) : (
             <Stack
               direction="row"
               spacing={1}
@@ -173,22 +459,10 @@ const LiveStreamRoom = () => {
               }}
             >
               <IconButton
-                onClick={() => setIsMicActive(!isMicActive)}
+                onClick={handleViewerLeftRoom}
                 sx={{ color: "white" }}
               >
-                {isMicActive ? <Mic /> : <MicOff color="error" />}
-              </IconButton>
-              <IconButton
-                onClick={() => setIsVideoActive(!isVideoActive)}
-                sx={{ color: "white" }}
-              >
-                {isVideoActive ? <Videocam /> : <VideocamOff color="error" />}
-              </IconButton>
-              <IconButton
-                onClick={() => setIsScreenSharing(!isScreenSharing)}
-                sx={{ color: "white" }}
-              >
-                {isScreenSharing ? <StopScreenShare /> : <ScreenShare />}
+                <ExitToApp />
               </IconButton>
             </Stack>
           )}

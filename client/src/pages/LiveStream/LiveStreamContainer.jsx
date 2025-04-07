@@ -5,12 +5,14 @@ import LiveStreamCard from "./LiveStreamCardComplot";
 import StartStreamDialog from "./StartStreamDialog";
 import { useNavigate } from "react-router-dom";
 import { CurrentUser } from "~/routes/GlobalContext";
+import { VideoCallContext } from "~/context/VideoCallContext";
 
 const LiveStreamContainer = () => {
   const [liveRooms, setLiveRooms] = useState([]);
   const [isStreamDialogOpen, setStreamDialogOpen] = useState(false);
   const { socket } = useContext(SocketContext);
   const { currentUserInfo } = useContext(CurrentUser);
+  const { startLiveStream, joinLiveStream } = useContext(VideoCallContext);
   const navigate = useNavigate();
   console.log("livePage");
   // socket.emit("getLiveRooms");
@@ -38,6 +40,7 @@ const LiveStreamContainer = () => {
 
   const handleStartStream = (streamTitle) => {
     const roomId = `stream_${Date.now()}`;
+    startLiveStream(roomId);
     socket.emit("createRoom", {
       owner: currentUserInfo?.email,
       roomId,

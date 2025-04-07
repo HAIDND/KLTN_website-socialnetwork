@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   Card,
   CardContent,
@@ -11,8 +11,10 @@ import {
 import { PersonOutline, AccessTime, PlayArrow } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { VideoCallContext } from "~/context/VideoCallContext";
 
 const LiveStreamCard = ({ room }) => {
+  const { startLiveStream, joinLiveStream } = useContext(VideoCallContext);
   const navigate = useNavigate();
   console.log("room", room);
   return (

@@ -59,6 +59,35 @@ const VideoCallProvider = ({ children }) => {
 
     getUserMediaStream();
   }, []);
+  const getUserMediaStream = async (boolean) => {
+    if (boolean) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        setUserStream(stream);
+        if (myVideoRef.current) {
+          myVideoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+      }
+    } else {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: false,
+          audio: false,
+        });
+        setUserStream(stream);
+        if (myVideoRef.current) {
+          myVideoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error("Error accessing media devices:", error);
+      }
+    }
+  };
   useEffect(() => {
     ///handle socket
     const handleSocketEvents = () => {
@@ -144,7 +173,7 @@ const VideoCallProvider = ({ children }) => {
   // thực hiện send call video
   const callUser = (targetId) => {
     if (!userStream) {
-      console.error("No media stream available");
+      console.error("No media provided");
       return;
     }
 
@@ -342,6 +371,100 @@ const VideoCallProvider = ({ children }) => {
       senderName: name,
     });
   };
+  ///add live stream feature
+  const [currentRoomId, setCurrentRoomId] = useState(null);
+  const startLiveStream = (roomId) => {
+    if (!userStream) {
+      console.error("No media stream available");
+      return;
+    }
+
+    try {
+      // Lưu ID phòng vào state
+      setCurrentRoomId(roomId);
+
+      // Tạo peer cho host (người phát)
+      const peer = new Peer({
+        initiator: true,
+        trickle: false,
+        stream: userStream,
+        config: {
+          iceServers: [
+            { urls: "stun:stun.l.google.com:19302" },
+            {
+              urls: "turn:numb.viagenie.ca",
+              username: "webrtc@live.com",
+              credential: "muazkh",
+            },
+          ],
+        },
+      });
+
+      // Gửi thông báo tạo phòng lên server
+      socket.emit("createRoom", { roomId });
+
+      // Khi có tín hiệu WebRTC từ host, gửi lên server
+      peer.on("signal", (data) => {
+        console.log("Host signaling:", data);
+        socket.emit("hostSignal", { roomId, signalData: data });
+      });
+
+      // Lưu lại host peer
+      peerConnectionRef.current = peer;
+
+      console.log(`Livestream started in room: ${roomId}`);
+    } catch (error) {
+      console.error("Error starting livestream:", error);
+    }
+  };
+
+  const joinLiveStream = (roomId) => {
+    try {
+      // Viewer yêu cầu tham gia phòng
+      socket.emit("joinRoom", { roomId });
+
+      // Khi nhận được tín hiệu từ host
+      socket.on("receiveHostSignal", (data) => {
+        const { signalData } = data;
+        console.log("Viewer received host signal:", signalData);
+
+        const peer = new Peer({
+          initiator: false,
+          trickle: false,
+          config: {
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              {
+                urls: "turn:numb.viagenie.ca",
+                username: "webrtc@live.com",
+                credential: "muazkh",
+              },
+            ],
+          },
+        });
+
+        // Khi viewer có tín hiệu WebRTC, gửi lại cho host
+        peer.on("signal", (signal) => {
+          socket.emit("viewerSignal", { roomId, signal });
+        });
+
+        // Khi nhận được stream từ host
+        peer.on("stream", (remoteStream) => {
+          console.log("Receiving livestream...");
+          if (partnerVideoRef.current) {
+            partnerVideoRef.current.srcObject = remoteStream;
+          }
+        });
+
+        // Kết nối viewer với host
+        peer.signal(signalData);
+
+        peerConnectionRef.current = peer;
+      });
+    } catch (error) {
+      console.error("Error joining livestream:", error);
+    }
+  };
 
   return (
     <VideoCallContext.Provider
@@ -379,6 +502,10 @@ const VideoCallProvider = ({ children }) => {
         isScreenSharing,
         toggleScreenSharingMode,
         toggleFullScreen,
+        getUserMediaStream,
+        startLiveStream,
+        currentRoomId,
+        joinLiveStream,
       }}
     >
       {children}

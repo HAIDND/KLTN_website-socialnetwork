@@ -27,6 +27,8 @@ function socketLiveStream(socket, io, liveRooms) {
         viewerId: socket.id,
         count: room.viewers.length,
       });
+      console.log("join room", liveRooms[roomId].viewers);
+      io.to(roomId).emit("roomInfo", room);
     }
   };
 
@@ -40,6 +42,7 @@ function socketLiveStream(socket, io, liveRooms) {
     if (room.viewers.length === 0 && socket.id === roomId) {
       delete liveRooms[roomId];
     }
+    console.log("leave room", liveRooms[roomId].viewers);
     updateRooms();
   };
 
@@ -87,6 +90,16 @@ function socketLiveStream(socket, io, liveRooms) {
     updateRooms();
   });
   socket.on("disconnect", handleDisconnect);
+
+  ///add livestrea,feature
+
+  socket.on("hostSignal", ({ roomId, signalData }) => {
+    io.to(roomId).emit("receiveHostSignal", { signalData });
+  });
+
+  socket.on("viewerSignal", ({ roomId, signal }) => {
+    io.to(liveRooms[roomId]).emit("connectViewer", { signal });
+  });
 }
 
 module.exports = socketLiveStream;

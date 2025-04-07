@@ -34,8 +34,13 @@ const ChatWindow = ({ onClose, friend }) => {
   const [ifCall, setIfCall] = useState(false);
   const messagesEndRef = useRef(null);
   //handle set info call video name = name user, myusserid = usersocketid
-  const { setName, setIsCalling, callUser, isCallAccepted } =
-    useContext(VideoCallContext);
+  const {
+    setName,
+    setIsCalling,
+    callUser,
+    isCallAccepted,
+    getUserMediaStream,
+  } = useContext(VideoCallContext);
   const [friendSocketId, setFriendSocketId] = useState(null);
   // Gửi friendId lên server để lấy socketId của bạn bè
   const getFriendSocketId = () => {
@@ -55,6 +60,7 @@ const ChatWindow = ({ onClose, friend }) => {
     }
     try {
       alert(friendSocketId);
+
       setName(currentUserInfo?.username || "none");
       callUser(friendSocketId); // Use friend's socket ID instead of hardcoded value
     } catch (error) {
@@ -72,6 +78,8 @@ const ChatWindow = ({ onClose, friend }) => {
         console.error("Failed to fetch chats:", error);
       }
     };
+    console.log("friend", friend);
+
     // socket.emit("register", currentUserInfo?._id);
     fetchChatList();
   }, []);
@@ -220,8 +228,10 @@ const ChatWindow = ({ onClose, friend }) => {
                 <IconButton
                   onClick={() => {
                     alert(friendSocketId);
+
                     setName(currentUserInfo?.username || "none");
                     setIsCalling(() => true);
+
                     callUser(friendSocketId);
                   }}
                   disabled={!friend?._id}

@@ -22,11 +22,6 @@ import { VideoCallContext } from "~/context/VideoCallContext";
 import ScreenShareIcon from "@mui/icons-material/ScreenShare";
 import ringtone from "~/assets/ringtone.ogg";
 
-const caller = {
-  avatar: "https://i.pravatar.cc/150?img=1",
-  name: "John Doe",
-  status: "online",
-};
 export default function HaveChatVideo() {
   const {
     receiveCall,
@@ -34,6 +29,7 @@ export default function HaveChatVideo() {
     isCallAccepted,
     endIncomingCall,
     setPartnerUserId,
+    opponentName,
   } = useContext(VideoCallContext);
   const [showModal, setShowModal] = useState(false);
   const audioRef = useRef();
@@ -75,11 +71,11 @@ export default function HaveChatVideo() {
             sx={{ p: 3, bgcolor: "#222", color: "#fff", textAlign: "center" }}
           >
             <Avatar
-              src={caller.avatar}
+              src={opponentName?.avatar}
               sx={{ width: 80, height: 80, mx: "auto", mb: 2 }}
             />
             <Typography variant="h6" sx={{ mb: 1.5 }}>
-              {caller.name}
+              {opponentName}
             </Typography>
             <Typography variant="body2" color="gray" sx={{ mb: 2 }}>
               Đang gọi...

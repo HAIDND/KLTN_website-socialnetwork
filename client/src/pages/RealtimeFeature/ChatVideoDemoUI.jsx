@@ -199,6 +199,7 @@ const ChatVideoDemoUI = ({ ifCalled }) => {
 
     endIncomingCall,
     setPartnerUserId,
+    getUserMediaStream,
   } = useContext(VideoCallContext);
   ///new
 
@@ -232,20 +233,17 @@ const ChatVideoDemoUI = ({ ifCalled }) => {
     }
   };
 
-  // useEffect(() => {
-  //   // Fake video stream cho người gọi
-  //   if (callerVideoRef.current) {
-  //     callerVideoRef.current.src = "https://www.w3schools.com/html/mov_bbb.mp4"; // Video mẫu
-  //     callerVideoRef.current.play();
-  //   }
-  // }, []);
-
+  useEffect(() => {
+    if (myVideoRef.current && userStream) {
+      myVideoRef.current.srcObject = userStream;
+    }
+  }, [userStream]);
   return (
     <>
       {userStream && (
         <Box
           sx={{
-            index: 9999,
+            zIndex: 9999,
             position: "fixed",
             top: 0,
             left: 0,
