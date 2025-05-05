@@ -1,63 +1,5 @@
-function socketLiveStream(socket, io, liveRooms) {
-  const updateRooms = () =>
-    io.emit("updateLiveRooms", Object.values(liveRooms));
-
-  const handleCreateRoom = ({ owner, roomId, streamerName }) => {
-    socket.join(roomId);
-    liveRooms[roomId] = {
-      owner: owner,
-      id: roomId,
-      streamer: streamerName,
-      viewers: [],
-      startTime: new Date(),
-    };
-    updateRooms();
-    console.log("liveRooms", liveRooms);
-  };
-
-  const handleJoinRoom = (roomId) => {
-    const room = liveRooms[roomId];
-    if (room) {
-      socket.join(roomId);
-      room.viewers.push({
-        id: socket.id,
-        joinTime: new Date(),
-      });
-      io.to(roomId).emit("viewerJoined", {
-        viewerId: socket.id,
-        count: room.viewers.length,
-      });
-      console.log("join room", liveRooms[roomId].viewers);
-      io.to(roomId).emit("roomInfo", room);
-    }
-  };
-
-  const handleLeaveRoom = (roomId) => {
-    const room = liveRooms[roomId];
-    if (!room) return;
-
-    socket.leave(roomId);
-    room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
-
-    if (room.viewers.length === 0 && socket.id === roomId) {
-      delete liveRooms[roomId];
-    }
-    console.log("leave room", liveRooms[roomId].viewers);
-    updateRooms();
-  };
-
-  const handleDisconnect = () => {
-    Object.keys(liveRooms).forEach((roomId) => {
-      const room = liveRooms[roomId];
-      room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
-
-      if (roomId === socket.id) {
-        delete liveRooms[roomId];
-        io.to(roomId).emit("streamEnded", { roomId });
-      }
-    });
-    updateRooms();
-  };
+function socketLiveStream(socket, io, rooms, onlineUsers) {
+  //chat  in room
   socket.on(
     "liveChat",
     ({ roomId, message, sender, senderName, timestamp }) => {
@@ -71,34 +13,128 @@ function socketLiveStream(socket, io, liveRooms) {
       });
     }
   );
+
+  //stream in rooms
+  const updateRooms = () => io.emit("updateLiveRooms", Object.values(rooms));
+
+  const handleCreateRoom = ({ owner, roomId, streamerName }) => {
+    socket.join(roomId);
+    rooms[roomId] = {
+      owner: owner,
+      id: roomId,
+      streamer: streamerName,
+      viewers: [],
+      startTime: new Date(),
+    };
+    updateRooms();
+    console.log("rooms", rooms);
+  };
+
+  const handleJoinRoom = (roomId) => {
+    const room = rooms[roomId];
+    if (room) {
+      socket.join(roomId);
+      room.viewers.push({
+        id: socket.id,
+        joinTime: new Date(),
+      });
+      io.to(roomId).emit("viewerJoined", {
+        viewerId: socket.id,
+        count: room.viewers.length,
+      });
+      console.log("join room", rooms[roomId].viewers);
+      io.to(roomId).emit("roomInfo", room);
+    }
+  };
+
+  const handleLeaveRoom = (roomId) => {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    socket.leave(roomId);
+    room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
+
+    if (room.viewers.length === 0 && socket.id === onlineUsers[rooms.owner]) {
+      delete rooms[roomId];
+    }
+    console.log("leave room", rooms[roomId].viewers);
+    updateRooms();
+  };
+
+  const handleDisconnect = () => {
+    Object.keys(rooms).forEach((roomId) => {
+      const room = rooms[roomId];
+      room.viewers = room.viewers.filter((viewer) => viewer.id !== socket.id);
+
+      if (roomId === socket.id) {
+        delete rooms[roomId];
+        io.to(roomId).emit("streamEnded", { roomId });
+      }
+    });
+    updateRooms();
+  };
+
   // Event listeners
   socket.on("getLiveRooms", () => {
-    io.emit("updateLiveRooms", Object.values(liveRooms));
+    io.emit("updateLiveRooms", Object.values(rooms));
   });
   socket.on("createRoom", handleCreateRoom);
   socket.on("joinRoom", handleJoinRoom);
   socket.on("leaveRoom", handleLeaveRoom);
-  socket.on("userLogout", (roomId) => {
-    console.log("userLogout", roomId);
-    delete liveRooms[roomId];
-    io.to(roomId).emit("streamEnded", { roomId });
-    updateRooms();
-  });
+  // socket.on("userLogout", (roomId) => {
+  //   console.log("userLogout", roomId);
+  //   delete rooms[roomId];
+  //   io.to(roomId).emit("streamEnded", { roomId });
+  //   updateRooms();
+  // });
   socket.on("endLive", (roomId) => {
-    delete liveRooms[roomId];
+    delete rooms[roomId];
     io.to(roomId).emit("streamEnded", { roomId });
+    console.log("endlive");
     updateRooms();
   });
   socket.on("disconnect", handleDisconnect);
 
   ///add livestrea,feature
+  // socket.on("createRoom", ({ roomId }) => {
+  //   rooms[roomId] = socket.id;
+  //   socket.join(roomId);
+  //   console.log(`Room ${roomId} created by ${socket.id}`);
+  // });
 
-  socket.on("hostSignal", ({ roomId, signalData }) => {
-    io.to(roomId).emit("receiveHostSignal", { signalData });
+  // socket.on("joinRoom", ({ roomId }) => {
+  //   const hostId = rooms[roomId];
+  //   if (hostId) {
+  //     socket.join(roomId);
+  //     io.to(hostId).emit("viewerSignal", { viewerId: socket.id });
+  //   }
+  // });
+
+  socket.on("hostSend", ({ roomId, signalData }) => {
+    const hostId = onlineUsers.get(rooms[roomId].owner);
+    console.log(rooms[roomId].viewers);
+    rooms[roomId].viewers.forEach((viewerSocketId) => {
+      io.to(viewerSocketId).emit("viewerJoined", { signalData });
+    });
+    // socket.to(roomId).emit("clientListen", { signalData });
   });
 
-  socket.on("viewerSignal", ({ roomId, signal }) => {
-    io.to(liveRooms[roomId]).emit("connectViewer", { signal });
+  socket.on("viewerJoin", ({ roomId, signal }) => {
+    console.log(onlineUsers.get(rooms[roomId].owner) + " host id");
+
+    const hostId = onlineUsers.get(rooms[roomId].owner);
+    if (hostId) {
+      io.to(hostId).emit("viewerJoined", { signal, viewerId: socket.id });
+    }
+  });
+
+  socket.on("disconnecting", () => {
+    for (const roomId of socket.rooms) {
+      if (rooms[roomId] === socket.id) {
+        socket.to(roomId).emit("hostLeft");
+        delete rooms[roomId];
+      }
+    }
   });
 }
 

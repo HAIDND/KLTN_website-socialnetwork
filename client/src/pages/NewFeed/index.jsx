@@ -6,6 +6,7 @@ import NewsfeedContent from "./newfeed.midle";
 import NewPost from "./newPost";
 import RightListFriend from "~/components/Elements/Friend/RightListFriend";
 import { CurrentUser } from "~/routes/GlobalContext";
+import RecommendExtension from "../RecommendLocation/RecommendExtension";
 function Newsfeed() {
   const { isMobile } = useContext(CurrentUser);
   return (
@@ -25,6 +26,7 @@ function Newsfeed() {
         <Grid item flex={2} sx={{ mt: 12, height: "100%", overflow: "auto" }}>
           <RightRequest />
           <RightListFriend />
+          <RecommendExtension />
         </Grid>
       )}
     </Grid>

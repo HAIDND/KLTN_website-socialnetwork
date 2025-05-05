@@ -11,7 +11,7 @@ const setupSocket = (server) => {
   //map user online
   const onlineUsers = new Map();
   // Danh sách các phòng live
-  let liveRooms = {};
+  let rooms = {};
 
   io.on("connection", (socket) => {
     // Kết nối socket cho live stream
@@ -36,7 +36,7 @@ const setupSocket = (server) => {
       socket.emit("checkUserOnline", isOnline);
     });
     //check id to socketid
-    socketLiveStream(socket, io, liveRooms);
+    socketLiveStream(socket, io, rooms, onlineUsers);
     // Khi frontend gửi friendId, backend gửi lại socketId của friendId
     socket.on("useridtosocketid", (friendId, callback) => {
       const friendSocketId = onlineUsers.get(friendId) || null;

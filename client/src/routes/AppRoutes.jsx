@@ -21,6 +21,9 @@ import Livestream from "~/pages/LiveStream/LiveStreamPage";
 import Videocall from "~/components/VideoChat";
 import LiveStreamPage from "~/pages/LiveStream/LiveStreamPage";
 import LiveStreamRoom from "~/pages/LiveStream/LiveStreamRoom";
+import RecommendPage from "~/pages/RecommendLocation/RecommendPage";
+import { RecommendContext } from "~/pages/RecommendLocation/RecommendContext";
+import RecommendFromInput from "~/pages/RecommendLocation/RecommendFromInput";
 
 export const routesArray = [
   ///public routes
@@ -56,6 +59,16 @@ export const routesArray = [
     element: (
       <PrivateRoute>
         <ChatVideoDemoUI />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/recommendpage",
+    element: (
+      <PrivateRoute>
+        <RecommendContext>
+          <RecommendPage />
+        </RecommendContext>
       </PrivateRoute>
     ),
   },
@@ -220,6 +233,14 @@ export const routesArray = [
     element: (
       <PrivateRoute>
         <DeleteAccountDialog />
+      </PrivateRoute>
+    ),
+  },
+  {
+    path: "/settings/interest",
+    element: (
+      <PrivateRoute>
+        <RecommendFromInput />
       </PrivateRoute>
     ),
   },

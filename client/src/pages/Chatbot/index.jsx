@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { Close, Comment } from "@mui/icons-material";
 
-const key = "AIzaSyAUexRDsO6x5o6mht9jjumvzaG5MMny6ho";
+const key = "your_key_api";
 
 const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${key}`;
 

@@ -5,24 +5,20 @@ import LiveStreamCard from "./LiveStreamCardComplot";
 import StartStreamDialog from "./StartStreamDialog";
 import { useNavigate } from "react-router-dom";
 import { CurrentUser } from "~/routes/GlobalContext";
-import { VideoCallContext } from "~/context/VideoCallContext";
+
+import { LivestreamContext } from "~/context/LivestreamContext";
 
 const LiveStreamContainer = () => {
   const [liveRooms, setLiveRooms] = useState([]);
   const [isStreamDialogOpen, setStreamDialogOpen] = useState(false);
   const { socket } = useContext(SocketContext);
   const { currentUserInfo } = useContext(CurrentUser);
-  const { startLiveStream, joinLiveStream } = useContext(VideoCallContext);
+  const { startLiveStream } = useContext(LivestreamContext);
   const navigate = useNavigate();
   console.log("livePage");
-  // socket.emit("getLiveRooms");
+
   useEffect(() => {
     socket.emit("getLiveRooms");
-    // socket.emit("getLiveRooms", () => {
-    //   socket.on("updateLiveRooms", (rooms) => {
-    //     setLiveRooms(rooms);
-    //   });
-    // });
     socket.on("updateLiveRooms", (rooms) => {
       setLiveRooms(rooms);
     });
@@ -62,7 +58,7 @@ const LiveStreamContainer = () => {
             Start Streaming
           </Button>
         </Box>
-
+        {/* <LiveVideo /> */}
         <Grid container spacing={3}>
           {liveRooms.map((room) => (
             <Grid item xs={12} sm={6} md={4} key={room.id}>

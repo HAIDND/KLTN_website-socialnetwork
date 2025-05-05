@@ -111,7 +111,7 @@ function SettingsPage() {
   const settingsOptions = [
     // { title: "Account Information", link: "account-information.html" },
     { title: "Edit Profile", link: "editprofile" },
-    // { title: "Account Password", link: "account-password.html" },
+    { title: "My interest", link: "interest" },
     // { title: "Help Information", link: "help-information.html" },
     { title: "Delete Account", link: "deleteaccount" },
   ];

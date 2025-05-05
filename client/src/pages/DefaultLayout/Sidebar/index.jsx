@@ -36,6 +36,7 @@ const Sidebar = () => {
     { title: "Settings", path: "/settings", icon: <SettingsIcon /> },
     { title: "ChatRealtime", path: "/chat", icon: <Chat /> },
     { title: "Live stream", path: "/livestream", icon: <Camera /> },
+    { title: "Recommend Location", path: "/recommendpage", icon: <Camera /> },
   ];
   console.log(currentUser);
   console.log(currentUserInfo);

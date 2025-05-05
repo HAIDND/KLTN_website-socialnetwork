@@ -8,6 +8,7 @@ import React, {
 import socket from "~/context/SocketInitial";
 import Peer from "simple-peer/simplepeer.min.js";
 import { SocketContext } from "./SocketContext";
+import { LivestreamProvider } from "./LivestreamContext";
 
 const VideoCallContext = createContext();
 
@@ -40,6 +41,11 @@ const VideoCallProvider = ({ children }) => {
   const partnerVideoRef = useRef();
   const peerConnectionRef = useRef();
   const screenShareTrackRef = useRef();
+  //livestream states
+  const [currentRoomId, setCurrentRoomId] = useState(null);
+  const [isLiveStreaming, setIsLiveStreaming] = useState(false);
+  const [viewerCount, setViewerCount] = useState(0);
+  const [isJoinedStream, setIsJoinedStream] = useState(false);
   //effect
   useEffect(() => {
     const getUserMediaStream = async () => {
@@ -152,6 +158,7 @@ const VideoCallProvider = ({ children }) => {
     });
 
     peer.on("signal", (data) => {
+      console.log("thiet lap nhan cuoc goi");
       socket.emit("answerCall", {
         signal: data,
         to: call.from,
@@ -162,6 +169,7 @@ const VideoCallProvider = ({ children }) => {
     });
 
     peer.on("stream", (currentStream) => {
+      console.log(" nhan stream  cuoc goi");
       if (partnerVideoRef.current) {
         partnerVideoRef.current.srcObject = currentStream;
       }
@@ -371,100 +379,6 @@ const VideoCallProvider = ({ children }) => {
       senderName: name,
     });
   };
-  ///add live stream feature
-  const [currentRoomId, setCurrentRoomId] = useState(null);
-  const startLiveStream = (roomId) => {
-    if (!userStream) {
-      console.error("No media stream available");
-      return;
-    }
-
-    try {
-      // Lưu ID phòng vào state
-      setCurrentRoomId(roomId);
-
-      // Tạo peer cho host (người phát)
-      const peer = new Peer({
-        initiator: true,
-        trickle: false,
-        stream: userStream,
-        config: {
-          iceServers: [
-            { urls: "stun:stun.l.google.com:19302" },
-            {
-              urls: "turn:numb.viagenie.ca",
-              username: "webrtc@live.com",
-              credential: "muazkh",
-            },
-          ],
-        },
-      });
-
-      // Gửi thông báo tạo phòng lên server
-      socket.emit("createRoom", { roomId });
-
-      // Khi có tín hiệu WebRTC từ host, gửi lên server
-      peer.on("signal", (data) => {
-        console.log("Host signaling:", data);
-        socket.emit("hostSignal", { roomId, signalData: data });
-      });
-
-      // Lưu lại host peer
-      peerConnectionRef.current = peer;
-
-      console.log(`Livestream started in room: ${roomId}`);
-    } catch (error) {
-      console.error("Error starting livestream:", error);
-    }
-  };
-
-  const joinLiveStream = (roomId) => {
-    try {
-      // Viewer yêu cầu tham gia phòng
-      socket.emit("joinRoom", { roomId });
-
-      // Khi nhận được tín hiệu từ host
-      socket.on("receiveHostSignal", (data) => {
-        const { signalData } = data;
-        console.log("Viewer received host signal:", signalData);
-
-        const peer = new Peer({
-          initiator: false,
-          trickle: false,
-          config: {
-            iceServers: [
-              { urls: "stun:stun.l.google.com:19302" },
-              {
-                urls: "turn:numb.viagenie.ca",
-                username: "webrtc@live.com",
-                credential: "muazkh",
-              },
-            ],
-          },
-        });
-
-        // Khi viewer có tín hiệu WebRTC, gửi lại cho host
-        peer.on("signal", (signal) => {
-          socket.emit("viewerSignal", { roomId, signal });
-        });
-
-        // Khi nhận được stream từ host
-        peer.on("stream", (remoteStream) => {
-          console.log("Receiving livestream...");
-          if (partnerVideoRef.current) {
-            partnerVideoRef.current.srcObject = remoteStream;
-          }
-        });
-
-        // Kết nối viewer với host
-        peer.signal(signalData);
-
-        peerConnectionRef.current = peer;
-      });
-    } catch (error) {
-      console.error("Error joining livestream:", error);
-    }
-  };
 
   return (
     <VideoCallContext.Provider
@@ -503,12 +417,9 @@ const VideoCallProvider = ({ children }) => {
         toggleScreenSharingMode,
         toggleFullScreen,
         getUserMediaStream,
-        startLiveStream,
-        currentRoomId,
-        joinLiveStream,
       }}
     >
-      {children}
+      <LivestreamProvider>{children}</LivestreamProvider>
     </VideoCallContext.Provider>
   );
 };
