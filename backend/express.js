@@ -9,6 +9,8 @@ const path = require("path");
 const chatRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const chatbotRoutes = require("./routes/chatbot.route")
+
 const http = require("http");
 const { Server } = require("socket.io");
 //add 8-4
@@ -64,6 +66,7 @@ app.use("/api/groups", groupRoutes);
 app.use("/api/chat", chatRoutes); // Prefix /api/chat cho các route chat
 app.use("/api/notification", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/chatbot", chatbotRoutes)
 
 // Socket.io event handling
 app.get("/getToken", (req, res) => {

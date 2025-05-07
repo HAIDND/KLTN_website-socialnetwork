@@ -1,10 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import "./index.css";
 import { Close, Comment } from "@mui/icons-material";
+import { API_BASE_URL } from "~/config/apiConfig";
 
-const key = "your_key_api";
-
-const apiUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=${key}`;
+const apiUrl = `${API_BASE_URL}chatbot`;
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +25,10 @@ const Chatbot = () => {
     "vé máy bay",
     "du lịch",
     "lữ hành",
+    "tại sao",
+    "du lich",
+    "đi",
+    "địa điểm"
   ]; // Thêm các từ khóa liên quan đến du lịch
 
   const isTourismRelated = (question) => {
@@ -48,12 +51,16 @@ const Chatbot = () => {
     if (!userMessage) return;
     inputRef.current.value = "";
     setChatHistory([...chatHistory, { role: "user", text: userMessage }]);
-    setTimeout(() => {
+    if (!isTourismRelated(userMessage)) {
+      updateHistory(
+        "Xin lỗi, tôi chỉ có thể trả lời các câu hỏi liên quan đến du lịch."
+      );
+      return;
+    }
       setChatHistory((prev) => [
         ...prev,
         { role: "model", text: "Thinking..." },
       ]);
-    }, 600);
     generateResponse([...chatHistory, { role: "user", text: userMessage }]);
   };
 
@@ -74,17 +81,8 @@ const Chatbot = () => {
       if (!response.ok)
         throw new Error(data.error.message || "An error occurred");
       console.log("data", data);
-      const apiResponseText = data.candidates[0].content.parts[0].text
-        .replace(/\*\*(.*?)\*\*/g, "$1")
-        .trim();
-      const userQuestion = history[history.length - 1].parts[0].text; // Lấy câu hỏi của người dùng
-      if (isTourismRelated(userQuestion)) {
-        updateHistory(apiResponseText);
-      } else {
-        updateHistory(
-          "Xin lỗi, tôi chỉ có thể trả lời các câu hỏi liên quan đến du lịch."
-        );
-      }
+      const apiResponseText = data.data;
+      updateHistory(apiResponseText);
     } catch (error) {
       console.error("Error generating response:", error);
     }
