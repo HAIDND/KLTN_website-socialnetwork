@@ -12,9 +12,7 @@ Dự án bao gồm 3 phần chính:
 
 ### Bước 1: Di chuyển vào thư mục `frontend`
 
-```bash
 cd frontend
-```
 
 ### Bước 2: Cài đặt thư viện
 
@@ -34,6 +32,8 @@ cd backend
 ### Bước 2: Cài đặt thư viện
 
 npm install
+Chuẩn bị MongoDB tạo database name my-social-network
+![alt text](image.png)
 
 ### Bước 3: Chạy server
 
