@@ -16,7 +16,7 @@ import {
 } from "@mui/material";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import { createPost } from "~/services/postServices/postService"; // Import the createPost function
 import CustomDialog from "~/components/Elements/CustomDialog";
 

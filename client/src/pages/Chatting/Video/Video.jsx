@@ -12,7 +12,7 @@ import {
   MdIosShare,
 } from "react-icons/md";
 import { Button, Col, Row } from "react-bootstrap";
-import { Avatar } from "antd";
+import { Avatar } from "@mui/material";
 import { FaUserLarge, FaVolumeXmark } from "react-icons/fa6";
 const Video = ({ userId, friendId }) => {
   const {

@@ -14,7 +14,7 @@ import {
   MenuItem,
 } from "@mui/material";
 import { readUser, updateUser } from "~/services/userServices/userService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import YesNoDialog from "~/components/Elements/YesNoDialog";
 import { useNavigate } from "react-router-dom";
 

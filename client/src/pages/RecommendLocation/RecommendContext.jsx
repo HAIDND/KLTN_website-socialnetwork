@@ -3,36 +3,46 @@ import { createContext, useContext, useReducer, useState } from "react";
 const RecommendContextAPI = createContext();
 
 // State reducer
-const initialState = JSON.parse(localStorage.getItem("optionRecommend")) || {
-  age_group: "",
-  gender: "",
-  travel_interests: [],
-  income: "",
-  location: "",
+const initialState = {
+  currentRecommendId: null,
+  currentPlace: null,
+  listRecommend: [],
+  listPlace: [],
+  hasMore: true,
 };
 
 function reducer(state, action) {
-  return { ...state, [action.field]: action.value };
+  switch (action.type) {
+    case "recommend/getTop5":
+      return { ...state, listRecommend: action.payload };
+    case "recommend/getAll":
+      return { ...state, listRecommend: action.payload };
+    case "recommend/getMore":
+      return {
+        ...state,
+        listPlace: [...state.listPlace, ...action.payload.data],
+        hasMore: action.payload.data.length < action.payload.limit,
+      };
+    case "recommend/clickLocation":
+      console.log("action", action.payload);
+      return {
+        ...state,
+        currentPlace: action.payload,
+        // currentRecommendId: action.payload.place.id,
+      };
+    default:
+      throw new Error(`Unknown action type: ${action.type}`);
+  }
 }
 
 function RecommendContext({ children }) {
-  //   const optionRecommend = {
-  //     age_group: "18-25",
-  //     gender: "Nam",
-  //     travel_interests: ["Xem phim", "Giải trí"],
-  //     income: "10 triệu - 20 triệu",
-  //     location: "Kon Tum",
-  //   };
-  const [optionRecommend, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(reducer, initialState);
   // console.log(typeof JSON.stringify(option_user));
-  const [recommendations, setRecommendations] = useState([]);
   return (
     <RecommendContextAPI.Provider
       value={{
-        optionRecommend: optionRecommend,
-        recommendations: recommendations,
-        setRecommendations: setRecommendations,
-        optionRecommend,
+        state,
+
         dispatch,
       }}
     >

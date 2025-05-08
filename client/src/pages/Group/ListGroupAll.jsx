@@ -28,7 +28,7 @@ import {
   listGroupAll,
   listGroupJoin,
 } from "~/services/groupServices/groupService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 
 const GroupCard = ({ group, onJoin, onLeave }) => {
   //dèine

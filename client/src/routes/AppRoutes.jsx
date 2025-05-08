@@ -24,6 +24,7 @@ import LiveStreamRoom from "~/pages/LiveStream/LiveStreamRoom";
 import RecommendPage from "~/pages/RecommendLocation/RecommendPage";
 import { RecommendContext } from "~/pages/RecommendLocation/RecommendContext";
 import RecommendFromInput from "~/pages/RecommendLocation/RecommendFromInput";
+import IsLoadingAction from "~/components/Elements/IsLoadingAction";
 
 export const routesArray = [
   ///public routes

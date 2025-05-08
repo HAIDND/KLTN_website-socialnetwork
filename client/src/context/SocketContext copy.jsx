@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import sockets from "./SocketInitial"; // Import socket từ file trên
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import { audio } from "~/assets/RingNotifi/audioNotifi";
 import Peer from "simple-peer";
 import CallVideos from "~/pages/Chatting/CallVideos";

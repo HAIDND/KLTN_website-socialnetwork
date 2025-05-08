@@ -15,7 +15,7 @@ import {
   readUser,
   saveInfo,
 } from "~/services/userServices/userService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import { useParams } from "react-router-dom";
 import {
   addFriendAPI,

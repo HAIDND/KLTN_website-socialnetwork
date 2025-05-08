@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import sockets from "./SocketInitial"; // Import socket từ file trên
-import { CurrentUser } from "~/routes/GlobalContext";
-import { audio } from "~/assets/RingNotifi/audioNotifi";
+import { CurrentUser } from "~/context/GlobalContext";
+import { callSound } from "~/assets/RingNotifi/audioNotifi";
 
 import CallVideos from "~/pages/Chatting/CallVideos";
 import { VideoCallProvider } from "./VideoCallContext";
@@ -61,7 +61,7 @@ export const SocketProvider = ({ children, userId }) => {
   useEffect(() => {
     const handleListenMessage = ({ senderId, message }) => {
       console.log("new mess is " + message);
-      audio.play();
+      callSound.play();
     };
     socket.on("private_message", handleListenMessage);
     return () => {

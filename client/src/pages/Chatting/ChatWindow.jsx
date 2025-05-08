@@ -14,7 +14,7 @@ import {
   getChatWithUser,
   sendMessage,
 } from "~/services/chatServices/chatService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser, useGlobalContext } from "~/context/GlobalContext";
 import { VideoCall } from "@mui/icons-material";
 import CallVideos from "./CallVideos";
 import notificationSound from "~/assets/RingNotifi/notifymoe.mp3"; // Import the notification sound
@@ -25,8 +25,23 @@ import Videocall from "~/components/VideoChat";
 import zIndex from "@mui/material/styles/zIndex";
 import IncomingCall from "./IncomingCall/IncomingCall";
 import Video from "./Video/Video";
+import { formatDistanceToNow } from "date-fns";
+import { vi } from "date-fns/locale";
+function timeSince(date) {
+  const seconds = Math.floor((new Date() - date) / 1000);
+
+  if (seconds < 60) return `${seconds} giây trước`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes} phút trước`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} giờ trước`;
+  const days = Math.floor(hours / 24);
+  return `${days} ngày trước`;
+}
+
 const ChatWindow = ({ onClose, friend }) => {
   const { setHaveNewMess, haveNewMess, socket } = useContext(SocketContext);
+  const { dispatchMessageState } = useGlobalContext();
 
   const { currentUserInfo } = useContext(CurrentUser);
   const [messages, setMessages] = useState([]);
@@ -86,35 +101,32 @@ const ChatWindow = ({ onClose, friend }) => {
   //send messs
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
+    // Gửi tin nhắn đến server
     await sendMessage(friend?._id, newMessage);
-    socket.emit("private_message", {
-      senderId: currentUserInfo?.email,
-      receiverId: friend?.email,
+
+    // Gửi tin nhắn đến bạn bè qua socket
+    const payload = {
+      senderEmail: currentUserInfo?.email,
+      receiverEmail: friend?.email,
       message: newMessage,
-    });
+    };
+    // socket.emit("personalChat", payload);
+    dispatchMessageState({ type: "chat/send", payload });
     setMessages((messages) => [
       ...messages,
       {
         content: newMessage,
-        createdAt: new Date().toISOString(),
+        createdAt: "a second ago",
+        receiverId: currentUserInfo._id,
         senderId: currentUserInfo._id,
-        // senderId: senderId,
+        __v: 0,
+        _id: "67d19813ec360214c557ec83",
       },
     ]);
     setNewMessage("");
-
-    // await sendMessage(friend?._id, newMessage);
-    // setNewMessage("");
-    // setMessages((prevMessages) => [
-    //   ...prevMessages,
-    //   {
-    //     senderId: currentUserInfo?._id,
-    //     content: newMessage,
-    //     createdAt: new Date().toISOString(),
-    //   },
-    // ]);
     scrollToBottom();
   };
+
   // Nhận tin nhắn riêng tư
   // useEffect(() => {
   //   socket.on("private_message", ({ senderId, message }) => {
@@ -150,26 +162,31 @@ const ChatWindow = ({ onClose, friend }) => {
   //     }); // Cleanup listener khi component unmount
   //   };
   // }, [socket]);
-  ///fix setmess 2 time
+  ///fix setmess 2 time ("personalChat", async ({ senderEmail, receiverEmail, message }) => {
+  const { notifiSound } = useGlobalContext();
   useEffect(() => {
-    const handlePrivateMessage = ({ senderId, message }) => {
+    const handleReceiveMessage = ({ senderEmail, message }) => {
       setMessages((messages) => [
         ...messages,
         {
           content: message,
-          createdAt: new Date().toISOString(),
+          createdAt: formatDistanceToNow(new Date(), {
+            addSuffix: true,
+            locale: vi,
+          }),
           receiverId: currentUserInfo._id,
-          senderId: senderId,
+          senderId: senderEmail,
         },
       ]);
       console.log(message);
+      notifiSound.play();
       setHaveNewMess(() => !haveNewMess);
     };
 
-    socket.on("private_message", handlePrivateMessage);
+    socket.on("personalChat", handleReceiveMessage);
 
     return () => {
-      socket.off("private_message", handlePrivateMessage); // Xóa listener đúng cách
+      socket.off("personalChat", handleReceiveMessage); // Xóa listener đúng cách
     };
   }, []); // Chỉ chạy lại khi socket thay đổi
   const scrollToBottom = () => {
@@ -228,10 +245,8 @@ const ChatWindow = ({ onClose, friend }) => {
                 <IconButton
                   onClick={() => {
                     alert(friendSocketId);
-
                     setName(currentUserInfo?.username || "none");
                     setIsCalling(() => true);
-
                     callUser(friendSocketId);
                   }}
                   disabled={!friend?._id}

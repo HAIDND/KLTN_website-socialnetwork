@@ -9,7 +9,7 @@ import {
   FlipCameraIos,
   Call,
 } from "@mui/icons-material";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import Video from "./Video/Video";
 import FormCard from "./FormCard/FormCard";
 import IncomingCall from "./IncomingCall/IncomingCall";

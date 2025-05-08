@@ -7,16 +7,7 @@ import { SocketContext } from "~/context/SocketContext";
 
 function ChatFriend() {
   const socket = useContext(SocketContext);
-  const {
-    contextValue,
-    curentUserProfile,
-    // setThemeColor,
-    // darkMode,
-    // setDarkMode,
-    // themeSecondary,
-    // setThemeSecondary,
-    // isMobile,
-  } = useContext(CurentUser);
+  const { contextValue, curentUserProfile } = useContext(CurentUser);
   console.log(curentUserProfile);
   const [userID, setUserID] = useState("");
   const [receiverId, setReceiverId] = useState("");

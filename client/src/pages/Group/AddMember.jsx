@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { getListFriend } from "~/services/friendServices/friendService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import { addMemberToGroup } from "~/services/groupServices/groupService";
 
 const AddMember = ({ open, close, group, onAdd, handleReload }) => {

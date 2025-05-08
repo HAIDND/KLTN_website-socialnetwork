@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Box, Typography, Button, Avatar, Grid } from "@mui/material";
 
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import {
   getListFriend,
   removeFriend,

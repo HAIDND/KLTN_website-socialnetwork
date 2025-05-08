@@ -16,10 +16,11 @@ import {
   People as PeopleIcon,
   Chat,
   Camera,
+  Recommend,
 } from "@mui/icons-material"; // Import icon từ MUI
 
 // Import context
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 
 const Sidebar = () => {
   const { currentUserInfo, currentUser, isMobile } = useContext(CurrentUser);
@@ -35,8 +36,12 @@ const Sidebar = () => {
     { title: "Groups", path: "/groups", icon: <GroupIcon /> },
     { title: "Settings", path: "/settings", icon: <SettingsIcon /> },
     { title: "ChatRealtime", path: "/chat", icon: <Chat /> },
-    { title: "Live stream", path: "/livestream", icon: <Camera /> },
-    { title: "Recommend Location", path: "/recommendpage", icon: <Camera /> },
+    // { title: "Live stream", path: "/livestream", icon: <Camera /> },
+    {
+      title: "Recommend Location",
+      path: "/recommendpage",
+      icon: <Recommend />,
+    },
   ];
   console.log(currentUser);
   console.log(currentUserInfo);

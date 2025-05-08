@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { deleteUser } from "~/services/userServices/userService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 
 function DeleteAccountDialog({ onDeleteAccount }) {
   const { currentUser } = useContext(CurrentUser);

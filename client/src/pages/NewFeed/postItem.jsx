@@ -28,7 +28,7 @@ import {
   People,
 } from "@mui/icons-material";
 
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import {
   createComment,
   deleteComment,

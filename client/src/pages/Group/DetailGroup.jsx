@@ -7,18 +7,19 @@ import LockIcon from "@mui/icons-material/Lock";
 import { useLocation, useParams } from "react-router-dom";
 import PostInGroup from "./CRUDPostGroup";
 import CreatePostInGroup from "./createPost";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import {
   addMemberToGroup,
   joinToGroup,
   leaveGroup,
   listGroupAll,
 } from "~/services/groupServices/groupService";
+import GroupChat from "./GroupChat";
 
 const DetailGroup = () => {
   //lấy id
   const { id } = useParams();
-  // alert(id);
+
   const location = useLocation();
   const [groupData, setGroupData] = useState(location.state?.groupData);
 
@@ -26,13 +27,13 @@ const DetailGroup = () => {
   const [isJoin, setJoin] = useState([]);
   const [reload, setReload] = useState(true);
 
-  const checkJoin = () => {
-    return groupData.members.includes(currentUser?.userId);
-  };
-  // alert(checkJoin());
-  useEffect(() => {
-    setJoin(checkJoin());
-  }, [isJoin]);
+  // const checkJoin = () => {
+  //   return groupData.members.includes(currentUser?.userId);
+  // };
+  // // alert(checkJoin());
+  // useEffect(() => {
+  //   setJoin(checkJoin());
+  // }, [isJoin]);
 
   //handle join gruop
   const handleJoinGroup = async () => {
@@ -152,6 +153,14 @@ const DetailGroup = () => {
           </Box>
           <CreatePostInGroup groupID={id} />
           <PostInGroup groupID={id} />
+        </Grid>
+        <Grid
+          item
+          flex={2}
+          sx={{ overflow: "auto", mt: 12 }}
+          display={{ xs: "none", md: "block" }}
+        >
+          <GroupChat></GroupChat>
         </Grid>
       </Grid>
     </>

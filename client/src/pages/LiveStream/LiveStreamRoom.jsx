@@ -26,7 +26,7 @@ import {
   ExitToApp,
 } from "@mui/icons-material";
 import { SocketContext } from "~/context/SocketContext";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import { VideoCallContext } from "~/context/VideoCallContext";
 import { LivestreamContext } from "~/context/LivestreamContext";
 

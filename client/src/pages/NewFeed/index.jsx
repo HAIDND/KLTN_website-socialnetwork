@@ -5,7 +5,7 @@ import { Grid } from "@mui/material";
 import NewsfeedContent from "./newfeed.midle";
 import NewPost from "./newPost";
 import RightListFriend from "~/components/Elements/Friend/RightListFriend";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import RecommendExtension from "../RecommendLocation/RecommendExtension";
 function Newsfeed() {
   const { isMobile } = useContext(CurrentUser);

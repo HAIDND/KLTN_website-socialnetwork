@@ -326,9 +326,6 @@ const ChatVideoDemoUI = ({ ifCalled }) => {
                 <IconButton onClick={switchCamera} color="primary">
                   <FlipCameraIos />
                 </IconButton>{" "}
-                <IconButton onClick={endCall} color="primary">
-                  <ScreenShareIcon />
-                </IconButton>
                 {isCallAccepted && !isCallEnded && (
                   <>
                     <IconButton onClick={endCall} color="error">

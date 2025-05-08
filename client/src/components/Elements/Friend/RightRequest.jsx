@@ -8,7 +8,7 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles"; // Import hook theme
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 import {
   acceptFriendRequest,
   getListFriendRequest,
@@ -115,9 +115,9 @@ const RightRequest = () => {
               <Avatar
                 alt={request.requester.name}
                 src={request.requester.avatar}
-                sx={{ marginRight: theme.spacing(2) }}
+                sx={{ marginRight: theme.spacing(0) }}
               />
-              <Box sx={{ flexGrow: 1, ml: 3 }}>
+              <Box sx={{ flexGrow: 1, ml: 1 }}>
                 <Typography
                   variant="body1"
                   sx={{ color: theme.palette.text.primary }}

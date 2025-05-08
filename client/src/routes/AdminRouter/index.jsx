@@ -1,8 +1,8 @@
 import { useContext, useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
+import { CurrentUser } from "~/context/GlobalContext";
 import auth from "~/services/authService/authHelper";
 import { readUser } from "~/services/userServices/userService";
-import { CurrentUser } from "../GlobalContext";
 
 function AdminRoute({ children }) {
   const { currentUser } = useContext(CurrentUser);

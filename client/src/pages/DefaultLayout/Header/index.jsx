@@ -21,7 +21,10 @@ import {
 } from "@mui/icons-material";
 
 import { logout } from "~/services/authService/authService";
-import { CurrentUser } from "~/routes/GlobalContext";
+import GlobalContext, {
+  CurrentUser,
+  useGlobalContext,
+} from "~/context/GlobalContext";
 import SearchComponent from "./SearchComponent";
 import NotificationPanel from "./Notifi";
 import ChatList from "~/pages/Chatting/ChatList";
@@ -45,6 +48,7 @@ const Header = () => {
     setDarkMode,
     isMobile,
   } = useContext(CurrentUser);
+  const { messageState } = useGlobalContext();
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [settingsAnchorEl, setSettingsAnchorEl] = useState(null);
@@ -128,6 +132,13 @@ const Header = () => {
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton onClick={() => setChatListOpen(!chatListOpen)}>
             <MessageIcon fontSize="large" />
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              sx={{ position: "absolute", top: 0, right: 0 }}
+            >
+              {messageState.unreadMessages.length}
+            </Typography>
           </IconButton>
 
           <IconButton onClick={handleNotifiOpen(setSettingsAnchorNotifi)}>

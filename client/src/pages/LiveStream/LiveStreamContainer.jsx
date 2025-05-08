@@ -4,7 +4,7 @@ import { SocketContext } from "~/context/SocketContext";
 import LiveStreamCard from "./LiveStreamCardComplot";
 import StartStreamDialog from "./StartStreamDialog";
 import { useNavigate } from "react-router-dom";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 
 import { LivestreamContext } from "~/context/LivestreamContext";
 

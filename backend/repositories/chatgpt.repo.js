@@ -10,7 +10,7 @@ const chatbotRepo = {
     try {
       console.log("contents before ");
       const response = await ai.models.generateContent({
-        model: " gemini-2.0-flash", // old version api  "gemini-1.5-pro",
+        model: "gemini-2.0-flash", // old version api  "gemini-1.5-pro",
         contents,
       });
       console.log("contents", response);

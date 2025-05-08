@@ -9,7 +9,7 @@ import { useState, useContext, useEffect } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { login } from "~/services/authService/authService";
 import auth from "~/services/authService/authHelper";
-import { CurrentUser } from "../../../routes/GlobalContext";
+import { CurrentUser } from "../../../context/GlobalContext";
 import { readUser } from "../../../services/userServices/userService";
 // import socket from "~/context/socket";
 import { SocketContext } from "~/context/SocketContext";

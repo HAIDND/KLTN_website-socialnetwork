@@ -19,7 +19,7 @@ import { listGroupJoin } from "~/services/groupServices/groupService";
 
 import AddMember from "./AddMember";
 import RemoveMember from "./RemoveMember";
-import { CurrentUser } from "~/routes/GlobalContext";
+import { CurrentUser } from "~/context/GlobalContext";
 const GroupCard = ({ group, onJoin, handleReload }) => {
   const [dataGroup, setDataGroup] = useState(group);
   const navigate = useNavigate();
