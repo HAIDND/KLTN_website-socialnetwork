@@ -1,7 +1,6 @@
 const { GoogleGenAI } = require("@google/genai");
-//1.5pero  AIzaSyB5MvFMgptQOHQV-DqpCP-S_Nclos42YyQ
-///2.- flash   AIzaSyDFtTK2Q2mheV0c50xLSisub5-sflY5_Nc
-const API_KEY = "AIzaSyDFtTK2Q2mheV0c50xLSisub5-sflY5_Nc";
+
+const API_KEY = "key";
 
 const ai = new GoogleGenAI({ apiKey: API_KEY });
 
