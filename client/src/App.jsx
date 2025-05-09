@@ -5,6 +5,7 @@ import DefaultLayout from "./pages/DefaultLayout/DefaultLayout";
 import auth from "./services/authService/authHelper";
 
 import CallVideos from "./pages/Chatting/CallVideos";
+import ScrollToTopButton from "./components/Elements/ScrollToTopButton";
 function App() {
   const AppRoutes = useRoutes(routesArray);
   return (
@@ -15,6 +16,7 @@ function App() {
       {/* >
       <Chatbot /> */}
       <>{AppRoutes}</>
+      <ScrollToTopButton />
     </GlobalContext>
   );
 }
