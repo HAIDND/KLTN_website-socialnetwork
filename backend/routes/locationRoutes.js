@@ -13,8 +13,14 @@ const localtionController = require("../controllers/locationsController");
 //   postController.createPost
 // );
 
+// //get raitngin location
+router.get("/ratinginlocation", localtionController.getRatingInLocation);
+//get my rating in location
+router.get("/myrating", localtionController.getMyRatingLocation);
 // API lấy danh sách bài viết của người dùng
 router.get("/:id?", localtionController.getLocations);
+
 //api tạo ration cho1 location
+
 router.post("/rating", localtionController.postRatingLocation);
 module.exports = router;
