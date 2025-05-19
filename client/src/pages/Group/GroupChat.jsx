@@ -10,50 +10,111 @@ import {
 } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
+import { notifiSound } from "~/assets/RingNotifi/audioNotifi";
 import { CurrentUser } from "~/context/GlobalContext";
 import socket from "~/context/SocketInitial";
+import { getGroupMessage, postGroupMessage } from "./groupChatService";
 
 function GroupChat() {
   const chatRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const { currentUserInfo } = useContext(CurrentUser);
-
+  const topMessageRef = useRef(null);
+  const observer = useRef();
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const { id } = useParams();
-
+  const [page, setPage] = useState(0); // Trang bắt đầu từ 0
+  // Load ban đầu
   useEffect(() => {
-    socket.emit("createGroupRoom", {
-      groupId: id,
-      memberId: currentUserInfo?.email,
-    });
-    socket.emit("joinRoom", {
-      groupId: id,
-      memberId: currentUserInfo?.email,
-    });
+    setPage(0);
+    setMessages([]);
+    setHasMore(true);
 
-    // Gửi tin nhắn
-    // socket.emit("groupChat", {
-    //   groupId: id,
-    //   message: "Hello group!",
-    //   senderId: currentUserInfo?.email,
-    //   senderName: currentUserInfo?.username,
-    // });
+    const initLoad = async () => {
+      const data = await getGroupMessage(id, page, 5);
+      console.log("data", data);
+      setMessages(Array.isArray(data) ? data : []);
+      scrollToBottom(); // Scroll xuống tin mới nhất
+    };
+    initLoad();
+  }, [id]);
+
+  // Tải thêm khi scroll tới đầu
+  useEffect(() => {
+    if (loadingMore || !hasMore) return;
+
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting) {
+          setLoadingMore(true);
+
+          const container = chatRef.current;
+          const previousScrollHeight = container.scrollHeight;
+
+          const nextPage = page + 1;
+          const more = await getGroupMessage(id, nextPage);
+
+          if (more.length === 0) {
+            setHasMore(false);
+          } else {
+            setMessages((prev) => [...more, ...prev]);
+            setPage(nextPage);
+
+            // Giữ nguyên vị trí cuộn
+            setTimeout(() => {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = newScrollHeight - previousScrollHeight;
+            }, 100);
+          }
+
+          setLoadingMore(false);
+        }
+      },
+      {
+        root: chatRef.current,
+        threshold: 0.1,
+      }
+    );
+
+    if (topMessageRef.current) {
+      observer.current.observe(topMessageRef.current);
+    }
+  }, [messages, page, hasMore, loadingMore]);
+
+  // Scroll xuống cuối
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (chatRef.current) {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
+    }, 100);
+  };
+  useEffect(() => {
+    socket.emit("joinOrCreateGroupRoom", {
+      groupId: id,
+      memberId: currentUserInfo?.email,
+    });
 
     // Nghe nhận tin nhắn realtime
-    socket.on("groupChat", ({ groupId, message, senderName }) => {
-      console.log(`[${groupId}] ${senderName}: ${message}`);
+    socket.on("groupChat", ({ groupId, message, senderName, senderId }) => {
+      if (senderId !== currentUserInfo?.email) {
+        notifiSound.play();
+      }
+
       setMessages((prev) => [
         ...prev,
-        {
-          message,
-          senderName,
-        },
+        { senderId, message, senderName, createAt: new Date().toDateString() },
       ]);
     });
     return () => {
       socket.off("groupChat");
       socket.emit("leaveRoom", {
         groupId: id,
+        memberId: currentUserInfo?.email,
       });
     };
   }, []);
@@ -61,71 +122,23 @@ function GroupChat() {
   //send messs
   const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-    //   await sendMessage(friend?.email, newMessage);
-    // socket.emit("groupChat", {
-    //   senderEmail: currentUserInfo?.email,
-    //   receiverEmail: friend?.email,
-    //   message: newMessage,
-    //   createdAt: new Date().toISOString(),
-    // });
     socket.emit("groupChat", {
       groupId: id,
       message: newMessage,
       senderId: currentUserInfo?.email,
       senderName: currentUserInfo?.username,
     });
+    await postGroupMessage({
+      senderAvatar: currentUserInfo?.avatar,
+      groupId: id,
+      message: newMessage,
+      senderId: currentUserInfo?.email,
+      senderName: currentUserInfo?.username,
+    });
     setNewMessage("");
-    //   setMessages((messages) => [
-    //     ...messages,
-    //     {
-    //       content: newMessage,
-    //       createdAt: new Date().toISOString(),
-    //       senderId: currentUserInfo._id,
-    //       // senderId: senderId,
-    //     },
-    //   ]);
   };
-  //   useEffect(() => {
-  //     const handleLiveChat = ({
-  //       roomId,
-  //       message,
-  //       sender,
-  //       senderName,
-  //       timestamp,
-  //     }) => {
-  //       setMessages((prev) => [
-  //         ...prev,
-  //         {
-  //           roomId,
-  //           message,
-  //           sender,
-  //           senderName,
-  //           timestamp,
-  //         },
-  //       ]);
-  //     };
-
-  //     socket.on("liveChat", handleLiveChat);
-  //     return () => socket.off("liveChat", handleLiveChat);
-  //   }, []);
-
-  //   const handleSendMessage = (e) => {
-  //     e.preventDefault();
-  //     if (!newMessage.trim()) return;
-
-  //     socket.emit("liveChat", {
-  //       roomId,
-  //       message: newMessage,
-  //       sender: currentUserInfo?._id,
-  //       senderName: currentUserInfo?.username,
-  //       timestamp: new Date(),
-  //     });
-  //     console.log("have new chat");
-  //     setNewMessage("");
-  //   };
   return (
     <div>
-      {" "}
       <Paper
         sx={{
           width: 350,
@@ -133,6 +146,8 @@ function GroupChat() {
           flexDirection: "column",
           borderLeft: 1,
           borderColor: "divider",
+          height: "85vh",
+          position: "fixed",
         }}
       >
         <Box
@@ -162,30 +177,62 @@ function GroupChat() {
             gap: 1,
           }}
         >
-          {messages.map((msg, idx) => (
-            <Box
-              key={idx}
-              sx={{
-                display: "flex",
-                gap: 1,
-                alignItems: "flex-start",
-              }}
-            >
-              <Avatar src={msg?.senderAvatar} sx={{ width: 32, height: 32 }} />
-              <Box>
-                <Typography variant="subtitle2" color="primary">
-                  {msg.senderName}
-                </Typography>
-                <Typography variant="body2">{msg?.message}</Typography>
-              </Box>
-            </Box>
-          ))}
+          {messages.length > 0 &&
+            messages.map((msg, idx) => {
+              const isOwnMessage = msg.senderId === currentUserInfo?.email;
+              return (
+                <Box
+                  key={idx}
+                  ref={idx === 0 ? topMessageRef : null} // Theo dõi tin đầu tiên
+                  sx={{
+                    display: "flex",
+                    justifyContent: isOwnMessage ? "flex-end" : "flex-start",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexDirection: isOwnMessage ? "row-reverse" : "row",
+                      alignItems: "flex-start",
+                      gap: 1,
+                      maxWidth: "80%",
+                      padding: 1,
+                      borderRadius: 2,
+                      backgroundColor: isOwnMessage ? "#d1e7dd" : "#f0f0f0",
+                      border: "1px solid #ccc",
+                    }}
+                  >
+                    <Avatar
+                      src={msg?.senderAvatar}
+                      sx={{ width: 32, height: 32 }}
+                    />
+                    <Box>
+                      <Typography
+                        variant="subtitle2"
+                        color={isOwnMessage ? "secondary" : "primary"}
+                      >
+                        {msg.senderName}
+                      </Typography>
+                      <Typography variant="body2">{msg.message}</Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {new Date(
+                          msg.createdAt || Date.now()
+                        ).toLocaleTimeString()}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+              );
+            })}
         </Box>
 
         {/* Chat Input */}
         <Box
           component="form"
-          onSubmit={handleSendMessage}
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
           sx={{
             p: 2,
             borderTop: 1,

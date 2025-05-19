@@ -7,6 +7,7 @@ import {
   IconButton,
   useTheme,
   Menu,
+  Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { getNotifi, readNotifi } from "~/services/notifiServices/notifiService";
@@ -14,11 +15,17 @@ import { getNotifi, readNotifi } from "~/services/notifiServices/notifiService";
 const NotificationPanel = ({ open, close }) => {
   const [notifilist, setNotifiList] = useState([]);
   const theme = useTheme(); // Lấy theme hiện tại từ context MUI
-
-  const handleReadNotifi = (id) => {
-    readNotifi(id);
+  // useEffect(async () => {
+  //   const data = await getNotifi();
+  //   setNotifiList(data.json());
+  //   return () => {
+  //     console.log("cleanup");
+  //   };
+  // }, []);
+  const handleReadNotifi = async (id) => {
+    await readNotifi(id);
   };
-
+  // if (!open) return;
   return (
     <Menu open={open} onClose={close}>
       <Slide
@@ -92,7 +99,8 @@ const NotificationPanel = ({ open, close }) => {
               </Paper>
             ))
           ) : (
-            <Typography variant="body2" sx={{ p: 2, textAlign: "center" }}>
+            <Typography variant="body2" sx={{ p: 2, textAlign: "start" }}>
+              <Divider sx={{ mb: 2 }} />
               No notifications
             </Typography>
           )}

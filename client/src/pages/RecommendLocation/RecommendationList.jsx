@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { ThumbUp, ThumbDown, ChatBubbleOutline } from "@mui/icons-material";
 import { useRecommend } from "./RecommendContext";
-import { getRecommend } from "~/api/RecommendAPI";
+import { getRecommendContent } from "~/api/RecommendAPI";
 import IsLoadingAction from "~/components/Elements/IsLoadingAction";
 import RatingLocation from "./RatingLocation";
 import CurrentPlace from "./CurrentPlace";
@@ -64,9 +64,12 @@ const PlaceCard = ({ place }) => {
       : place.rating;
   const handleClick = async (place) => {
     // const data = await getRecommend(place.id);
+    console.log("place", place.id);
+    const data = await getRecommendContent(place.id);
+    console.log("data", data.recommendations);
     dispatch({
       type: "recommend/clickLocation",
-      payload: place,
+      payload: { current: place, recommendContent: data.recommendations },
     });
     window.scrollTo({
       top: 0,

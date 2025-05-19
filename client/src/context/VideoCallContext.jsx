@@ -100,7 +100,6 @@ const VideoCallProvider = ({ children }) => {
       //step1 on set id usser
       socket.on("socketId", (id) => {
         setMyUserId(id);
-        console.log("User socketsid: ", id);
       });
       //step2 on setmmedia friends
       socket.on("mediaStatusChanged", ({ mediaType, isActive }) => {

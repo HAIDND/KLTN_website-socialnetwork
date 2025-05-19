@@ -1,16 +1,17 @@
 import { URL_recommendSystem } from "~/config/apiConfig";
 ///read user api `${API_BASE_URL}users/` + userID,   `${API_BASE_URL}/users/`
-export const getRecommend = async (index) => {
+export const getRecommendContent = async (index) => {
   try {
     console.log(`${URL_recommendSystem}${index}`);
-    let response = await fetch(`${URL_recommendSystem}${index}`, {
+    let res = await fetch(`${URL_recommendSystem}${index}`, {
       method: "GET",
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
     });
-    return await response.json();
+    const data = await res.json();
+    return data;
   } catch (error) {
     console.log(error);
   }

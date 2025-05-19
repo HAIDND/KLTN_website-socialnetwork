@@ -9,7 +9,11 @@ import GlobalTheme from "./GlobalTheme";
 import { createTheme, useMediaQuery } from "@mui/material";
 import { SocketProvider } from "~/context/SocketContext";
 import { VideoCallProvider } from "~/context/VideoCallContext";
-import { notifiSound, callSound } from "~/assets/RingNotifi/audioNotifi";
+import {
+  notifiSound,
+  callSound,
+  notifiGlobalSound,
+} from "~/assets/RingNotifi/audioNotifi";
 import socket from "./SocketInitial";
 import { chatReducer, initialChatState } from "./chatReducer";
 export const CurrentUser = createContext();
@@ -62,8 +66,35 @@ export default function GlobalContext({ children }) {
       socket.off("personalChat");
     };
   }, []);
+  useEffect(() => {
+    socket.on("newNotifi", () => {
+      // dispatchMessageState({
+      //   type: "chat/receive",
+      //   payload: { senderEmail, message },
+      // });
+      notifiGlobalSound.play();
+      console.log("newNotifi");
+    });
 
-  ///
+    return () => {
+      socket.off("newNotifi");
+    };
+  }, []);
+  useEffect(() => {
+    socket.on("groupChat", () => {
+      // dispatchMessageState({
+      //   type: "chat/receive",
+      //   payload: { senderEmail, message },
+      // });
+      notifiGlobalSound.play();
+    });
+
+    return () => {
+      socket.off("groupChat");
+    };
+  }, []);
+  // callSound.play();
+  ///newNotifi
   useEffect(() => {
     function registerSocketEvents(store) {
       socket.on("new_notification", (data) => {

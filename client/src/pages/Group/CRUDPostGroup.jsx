@@ -497,10 +497,9 @@ export default function PostInGroup({ groupID }) {
         <Card
           key={item._id}
           sx={{
-            maxWidth: 635,
             mb: 3,
             bgcolor: "background.paper",
-            border: "1px solid #ddd",
+            border: "1px solid #CCC",
             borderRadius: 2,
             boxShadow: 1,
           }}
@@ -544,7 +543,7 @@ export default function PostInGroup({ groupID }) {
           {item?.image && (
             <CardMedia component="img" image={item?.image} alt="Post Image" />
           )}
-
+          <Divider />
           <CardActions disableSpacing>
             <IconButton onClick={() => likePosts(item._id)}>
               <Favorite

@@ -105,10 +105,9 @@ const CreatePostInGroup = ({ addUpdate, groupID }) => {
   return (
     <Box
       sx={{
-        maxWidth: 600,
         padding: 2,
         mb: 4,
-        border: `1px solid ${theme.palette.divider}`,
+        border: "1px solid #CCC",
         borderRadius: 2,
         backgroundColor: theme.palette.background.paper,
       }}

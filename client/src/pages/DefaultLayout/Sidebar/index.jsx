@@ -35,7 +35,7 @@ const Sidebar = () => {
     { title: "Friends", path: "/friends", icon: <PeopleIcon /> },
     { title: "Groups", path: "/groups", icon: <GroupIcon /> },
     { title: "Settings", path: "/settings", icon: <SettingsIcon /> },
-    { title: "ChatRealtime", path: "/chat", icon: <Chat /> },
+    // { title: "ChatRealtime", path: "/chat", icon: <Chat /> },
     // { title: "Live stream", path: "/livestream", icon: <Camera /> },
     {
       title: "Recommend Location",
@@ -43,8 +43,6 @@ const Sidebar = () => {
       icon: <Recommend />,
     },
   ];
-  console.log(currentUser);
-  console.log(currentUserInfo);
   return (
     <Box
       sx={{

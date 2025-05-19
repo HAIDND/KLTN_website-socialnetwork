@@ -188,7 +188,6 @@ const ChatWindow = ({ onClose, friend }) => {
       {!isCallAccepted && (
         <>
           <Box
-            ref={scrollContainerRef}
             component={Paper}
             elevation={6}
             sx={{
@@ -258,6 +257,7 @@ const ChatWindow = ({ onClose, friend }) => {
 
             {/* Messages Section */}
             <Box
+              ref={scrollContainerRef}
               onScroll={handleScroll}
               sx={{
                 flex: 1,

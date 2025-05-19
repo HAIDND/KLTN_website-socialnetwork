@@ -1,13 +1,13 @@
 const Message = require("../models/message");
-const User = require("../models/user"); // Mô hình người dùng
+const User = require("../models/User"); // Mô hình người dùng
 const Friendship = require("../models/Friendship");
 const moment = require("moment");
 const Notification = require("../models/Notification");
-const { io } = require("../express"); // Import socket từ file cấu hình
+const { emitEventToUser } = require("../socket");
 // Gửi tin nhắn
 exports.sendMessage = async (req, res) => {
   try {
-    const { receiverId, content } = req.body; // Lấy receiverId và nội dung tin nhắn từ body yêu cầu
+    const { receiverId, receiverEmail, content } = req.body; // Lấy receiverId và nội dung tin nhắn từ body yêu cầu
     const senderId = req.userId; // Lấy userId từ middleware xác thực
 
     // Kiểm tra xem người nhận có tồn tại trong hệ thống không
@@ -39,27 +39,21 @@ exports.sendMessage = async (req, res) => {
     await newMessage.save();
 
     // Tạo thông báo cho người tạo bài viết
-    const user = await User.findById(senderId).select("username"); // Lấy trường 'name' của người dùng
+    // const user = await User.findById(senderId).select("username"); // Lấy trường 'name' của người dùng
 
-    // **Tạo thông báo**
-    const newNotification = new Notification({
-      userId: receiverId, // Người nhận thông báo
-      type: "new_message", // Loại thông báo
-      message: `${receiver.username}, bạn vừa nhận được một tin nhắn mới từ ${user.username}`, // Nội dung thông báo
-      createdAt: new Date(),
-      isRead: false, // Đánh dấu thông báo chưa được đọc
-    });
+    // **Tạo thông báo**receiverId, receiverEmail, content
+    const temp = {
+      senderId: senderId,
+      senderName: "Alice",
+      senderAvatar: "https://example.com/avatar.jpg",
+      receiverId: receiverId,
+      receiverName: "Bob",
+      type: "message",
+    };
+    const newNotification = new Notification(temp);
+    emitEventToUser(receiverEmail, "newNotifi", temp);
 
-    // **Gửi tin nhắn qua Socket.IO**
-    // io.to(receiverId).emit("new_message", newMessage);
-
-    // // **Gửi thông báo qua Socket.IO**
-    // io.to(receiverId).emit("new_notification", {
-    //     message: newNotification.message,
-    //     createdAt: newNotification.createdAt,
-    // });
-    // Lưu thông báo vào cơ sở dữ liệu
-    await newNotification.save();
+    const saved = await newNotification.save();
 
     // Trả về tin nhắn vừa tạo
     res.status(201).json(newMessage);
@@ -74,20 +68,25 @@ exports.getMessages = async (req, res) => {
   try {
     const { userId } = req.params; // Lấy ID người dùng từ URL
     const currentUserId = req.userId; // Lấy userId của người dùng hiện tại từ middleware xác thực
-    // Chuyển đổi sang số nguyên
-    // const pageNumber = parseInt(page, 10);
-    // const limitNumber = parseInt(limit, 10);
-    // const skip = (pageNumber - 1) * limitNumber;
-    // Tìm tất cả tin nhắn giữa người dùng hiện tại và người dùng khác
+    console.log("getuserpMessage", req.params.userId);
+
+    const { limit = 10, page = 0 } = req.query;
+    console.log("page", page);
+    console.log("limit", limit);
+
+    // let messages = await GroupMessage.find({ groupId })
+    //   .sort({ createdAt: -1 })
+    //   .skip(parseInt(page) * parseInt(limit))
+    //   .limit(parseInt(limit));
     const messages = await Message.find({
       $or: [
         { senderId: currentUserId, receiverId: userId },
         { senderId: userId, receiverId: currentUserId },
       ],
-    }).sort({ createdAt: 1 });
-    // .skip(skip)
-    // .limit(limitNumber); // Sắp xếp theo thời gian gửi (cũ nhất trước)
-    // Định dạng lại createdAt của mỗi tin nhắn
+    })
+      .sort({ createdAt: 1 })
+      .skip(parseInt(page) * parseInt(limit))
+      .limit(parseInt(limit));
 
     const formattedMessages = messages.map((message) => {
       let formatTime;

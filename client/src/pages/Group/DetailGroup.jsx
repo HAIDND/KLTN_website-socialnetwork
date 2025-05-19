@@ -70,15 +70,24 @@ const DetailGroup = () => {
           sx={{ overflow: "auto" }}
           display={{ xs: "none", md: "block" }}
         ></Grid>
-        <Grid item flex={4} sx={{ mt: 12, height: "100%", overflow: "auto" }}>
+        <Grid
+          item
+          flex={4}
+          sx={{
+            mt: 12,
+            height: "100%",
+            overflow: "auto",
+            marginRight: 5,
+            marginLeft: 5,
+          }}
+        >
           <Box
             sx={{
-              maxWidth: 600,
-
-              p: 2,
+              padding: 3,
               mb: 5,
               boxShadow: 2,
               borderRadius: 2,
+              border: "1px solid #CCC",
               bgcolor: "background.paper",
               display: "flex",
               alignItems: "center",
@@ -160,7 +169,7 @@ const DetailGroup = () => {
           sx={{ overflow: "auto", mt: 12 }}
           display={{ xs: "none", md: "block" }}
         >
-          <GroupChat></GroupChat>
+          <GroupChat />
         </Grid>
       </Grid>
     </>

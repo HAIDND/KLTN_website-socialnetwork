@@ -15,7 +15,6 @@ const initialState = {
   isLoading: false, // check if loading
 };
 const userId = JSON.parse(sessionStorage.getItem("jwt"))?.userId || "null";
-console.log("userId", userId);
 function reducer(state, action) {
   switch (action.type) {
     case "recommend/loading":
@@ -35,18 +34,24 @@ function reducer(state, action) {
       console.log("action", action.payload);
       return {
         ...state,
-        currentPlace: action.payload,
+        currentPlace: action.payload.current,
         currentlistRating: [],
         myRating: [],
+        listAllPlace: action.payload.recommendContent,
         isLoading: false,
         // currentRecommendId: action.payload.place.id,
       };
     case "recommend/getRatingInLocation":
-      console.log("action", action.payload);
       return {
         ...state,
         isLoading: false,
         currentlistRating: [...state.currentlistRating, ...action.payload],
+      };
+    case "recommend/clearRatingInLocation":
+      return {
+        ...state,
+        isLoading: false,
+        currentlistRating: [],
       };
     case "recommend/getMyRatingInLocation":
       console.log("action", action.payload);

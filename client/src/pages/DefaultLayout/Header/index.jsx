@@ -144,12 +144,7 @@ const Header = () => {
           <IconButton onClick={handleNotifiOpen(setSettingsAnchorNotifi)}>
             <NotificationsIcon fontSize="large" />
           </IconButton>
-
-          <NotificationPanel
-            anchorEl={settingsAnchorNotifi}
-            open={Boolean(settingsAnchorNotifi)}
-            close={handleCloseNotifi}
-          />
+          {Boolean(settingsAnchorNotifi) && <NotificationPanel />}
 
           {!isMobile && (
             <IconButton onClick={handleMenuOpen(setSettingsAnchorEl)}>

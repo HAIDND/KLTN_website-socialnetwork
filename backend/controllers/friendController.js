@@ -1,5 +1,5 @@
 const Friendship = require("../models/Friendship");
-const User = require("../models/user"); // Thay thế bằng đường dẫn đúng tới file model User
+const User = require("../models/User"); // Thay thế bằng đường dẫn đúng tới file model User
 const { createRelationship } = require("./neo4j/neo4jService");
 
 // POST /api/friends/request

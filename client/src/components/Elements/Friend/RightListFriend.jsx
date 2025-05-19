@@ -83,9 +83,7 @@ function FriendCardItem({ friend, handleFriendClick }) {
   const theme = useTheme(); // Truy cập theme
   const [isOnline, setIsOnline] = useState(null);
   // Gọi checkOnline() khi component mount
-  useEffect(() => {
-    console.log(isOnline);
-  }, [CheckUserActive(friend?.email)]); // Chỉ gọi lại khi friend.email thay đổi
+  useEffect(() => {}, [CheckUserActive(friend?.email)]); // Chỉ gọi lại khi friend.email thay đổi
   return (
     <ListItem
       key={friend._id}

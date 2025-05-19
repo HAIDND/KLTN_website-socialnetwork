@@ -7,6 +7,7 @@ import NewPost from "./newPost";
 import RightListFriend from "~/components/Elements/Friend/RightListFriend";
 import { CurrentUser } from "~/context/GlobalContext";
 import RecommendExtension from "../RecommendLocation/RecommendExtension";
+
 function Newsfeed() {
   const { isMobile } = useContext(CurrentUser);
   return (

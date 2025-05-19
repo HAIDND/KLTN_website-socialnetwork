@@ -6,7 +6,7 @@ const friendRoutes = require("./routes/friendRoutes");
 const postRoutes = require("./routes/postRoutes");
 const groupRoutes = require("./routes/groupRoutes");
 const path = require("path");
-const chatRoutes = require("./routes/messageRoutes");
+const chatRoutes = require("./routes/userMessage.route");
 const notificationRoutes = require("./routes/notificationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const chatbotRoutes = require("./routes/chatbot.route");
@@ -17,17 +17,18 @@ const { Server } = require("socket.io");
 const { AccessToken } = require("livekit-server-sdk");
 const apiKey = "devkey";
 const apiSecret = "devsecret";
-//âsad
-const corsOptions = {
-  origin: "http://localhost:5173", // URL của frontend
-  credentials: true, // Cho phép cookie
-};
 
 const mongoose = require("mongoose");
-const setupSocket = require("./socket");
+const { setupSocket } = require("./socket");
+const groupMessageRoute = require("./routes/groupMessage.route");
 
 dotenv.config();
-
+//âsad
+const corsOptions = {
+  origin: "http://localhost:5173" || process.env.CORS_ORIGIN,
+  // origin: "http://localhost:5173", // URL của frontend
+  credentials: true, // Cho phép cookie
+};
 // Kết nối tới MongoDB
 mongoose
   .connect(process.env.MONGO_URI, {
@@ -70,6 +71,8 @@ app.use("/api/chatbot", chatbotRoutes);
 
 // Routes
 app.use("/api/locations", locationRoutes);
+// Routes
+app.use("/api/groupmessage", groupMessageRoute);
 // Socket.io event handling
 app.get("/getToken", (req, res) => {
   const { identity, room } = req.query;

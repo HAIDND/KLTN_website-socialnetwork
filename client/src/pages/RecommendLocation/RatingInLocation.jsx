@@ -37,6 +37,11 @@ export default function RatingInLocation() {
   useEffect(() => {
     dispatch({ type: "recommend/loading" });
     fetchRatingInLocation();
+    return () => {
+      dispatch({
+        type: "recommend/clearRatingInLocation",
+      });
+    };
   }, [fetchRatingInLocation, state.currentPlace.id]);
 
   const lastLocationRef = useCallback(

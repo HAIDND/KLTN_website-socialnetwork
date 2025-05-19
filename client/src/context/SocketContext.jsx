@@ -38,7 +38,6 @@ export const SocketProvider = ({ children, userId }) => {
   useEffect(() => {
     socket.on("socketId", (id) => {
       setRootSocketID(id);
-      console.log("socket is " + id);
       const storedToken = sessionStorage.getItem("jwt");
       const tokenData = storedToken ? JSON.parse(storedToken) : null;
       readUser(tokenData.userId).then((data) => {
