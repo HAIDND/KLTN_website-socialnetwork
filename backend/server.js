@@ -19,8 +19,9 @@ const apiKey = "devkey";
 const apiSecret = "devsecret";
 
 const mongoose = require("mongoose");
-const { setupSocket } = require("./socket");
+const { setupSocket } = require("./socketIO/socket");
 const groupMessageRoute = require("./routes/groupMessage.route");
+const googleAuthRoute = require("./utils/googleAuth.route");
 
 dotenv.config();
 //âsad
@@ -73,6 +74,7 @@ app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/locations", locationRoutes);
 // Routes
 app.use("/api/groupmessage", groupMessageRoute);
+app.use("/api/google", googleAuthRoute);
 // Socket.io event handling
 app.get("/getToken", (req, res) => {
   const { identity, room } = req.query;

@@ -13,6 +13,7 @@ import { CurrentUser } from "../../../context/GlobalContext";
 import { readUser } from "../../../services/userServices/userService";
 // import socket from "~/context/socket";
 import { SocketContext } from "~/context/SocketContext";
+import { GoogleRegister } from "~/components/Elements/GoogleAuth";
 
 export default function Login() {
   const { LoginSocket } = useContext(SocketContext);
@@ -157,8 +158,11 @@ export default function Login() {
             ":hover": { backgroundColor: "#166fe5" },
           }}
         >
-          Đăng nhập
+          Login
         </Button>
+        <Box>
+          <GoogleRegister></GoogleRegister>
+        </Box>
       </Box>
     </Box>
   );

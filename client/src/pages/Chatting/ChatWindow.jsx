@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useContext, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useContext,
+  useRef,
+  useLayoutEffect,
+} from "react";
 import {
   Box,
   Avatar,
@@ -8,6 +14,7 @@ import {
   Button,
   Paper,
   Input,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
@@ -38,14 +45,7 @@ function timeSince(date) {
 const ChatWindow = ({ onClose, friend }) => {
   const { setHaveNewMess, haveNewMess, socket } = useContext(SocketContext);
   const { dispatchMessageState } = useGlobalContext();
-
   const { currentUserInfo } = useContext(CurrentUser);
-  const [messages, setMessages] = useState([]);
-  // const [newMessage, setNewMessage] = useState("");
-  const newMessage = useRef("");
-  const [ifCall, setIfCall] = useState(false);
-  const messagesEndRef = useRef(null);
-  //handle set info call video name = name user, myusserid = usersocketid
   const {
     setName,
     setIsCalling,
@@ -53,9 +53,19 @@ const ChatWindow = ({ onClose, friend }) => {
     isCallAccepted,
     getUserMediaStream,
   } = useContext(VideoCallContext);
+  // const [newMessage, setNewMessage] = useState("");
   const [friendSocketId, setFriendSocketId] = useState(null);
 
+  const newMessage = useRef("");
+  const messagesEndRef = useRef(null);
+  const messageBoxRef = useRef(null);
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const prevScrollHeightRef = useRef(0);
   const [page, setPage] = useState(0);
+
+  ///old
   const scrollContainerRef = useRef(null);
   const [isFetching, setIsFetching] = useState(false);
   // Gửi friendId lên server để lấy socketId của bạn bè
@@ -98,39 +108,49 @@ const ChatWindow = ({ onClose, friend }) => {
     // socket.emit("register", currentUserInfo?._id);
     fetchChatList();
   }, []); // Chỉ chạy khi component được mount///handle scroll
-  const handleScroll = async () => {
-    const container = scrollContainerRef.current;
-    if (!container || isFetching || container.scrollTop > 200) return;
+  // const handleScroll = async () => {
+  //   const container = scrollContainerRef.current;
+  //   if (!container || isFetching || container.scrollTop > 200) return;
 
-    setIsFetching(true);
-    try {
-      const nextPage = page + 1;
-      const newMessages = await getChatWithUser(friend?._id, nextPage);
+  //   setIsFetching(true);
+  //   try {
+  //     const nextPage = page + 1;
+  //     const newMessages = await getChatWithUser(friend?._id, nextPage);
 
-      if (newMessages.reverse().length > 0) {
-        const prevScrollHeight = container.scrollHeight;
-        setMessages((prev) => [...newMessages, ...prev]);
-        setPage(nextPage);
+  //     if (newMessages.reverse().length > 0) {
+  //       const prevScrollHeight = container.scrollHeight;
+  //       setMessages((prev) => [...newMessages, ...prev]);
+  //       setPage(nextPage);
 
-        // Giữ nguyên vị trí cuộn sau khi thêm dữ liệu
-        setTimeout(() => {
-          container.scrollTop = container.scrollHeight - prevScrollHeight;
-        }, 0);
-        // scrollToBottom();
-      }
-    } catch (error) {
-      console.error("Failed to load more messages:", error);
-    } finally {
-      setIsFetching(false);
-    }
-  };
+  //       // Giữ nguyên vị trí cuộn sau khi thêm dữ liệu
+  //       setTimeout(() => {
+  //         container.scrollTop = container.scrollHeight - prevScrollHeight;
+  //       }, 0);
+  //       // scrollToBottom();
+  //     }
+  //   } catch (error) {
+  //     console.error("Failed to load more messages:", error);
+  //   } finally {
+  //     setIsFetching(false);
+  //   }
+  // };
   //send messs
   const handleSendMessage = async () => {
     console.log("send mess", newMessage.current.value);
     if (!newMessage.current.value.trim()) return;
     // Gửi tin nhắn đến server
     await sendMessage(friend?._id, friend.email, newMessage.current.value);
-
+    console.log(newMessage.current.value);
+    const newMess = newMessage.current.value;
+    setMessages((messages) => [
+      ...messages,
+      {
+        content: newMess,
+        createdAt: "a second ago",
+        receiverId: currentUserInfo._id,
+        senderId: currentUserInfo._id,
+      },
+    ]);
     // Gửi tin nhắn đến bạn bè qua socket
     const payload = {
       senderEmail: currentUserInfo?.email,
@@ -139,18 +159,8 @@ const ChatWindow = ({ onClose, friend }) => {
     };
     // socket.emit("personalChat", payload);
     dispatchMessageState({ type: "chat/send", payload });
-    setMessages((messages) => [
-      ...messages,
-      {
-        content: newMessage.current.value,
-        createdAt: "a second ago",
-        receiverId: currentUserInfo._id,
-        senderId: currentUserInfo._id,
-        __v: 0,
-        _id: "67d19813ec360214c557ec83",
-      },
-    ]);
-    newMessage.current.value = "";
+
+    newMessage.current.value = null;
     scrollToBottom();
   };
   const { notifiSound } = useGlobalContext();
@@ -160,10 +170,11 @@ const ChatWindow = ({ onClose, friend }) => {
         ...messages,
         {
           content: message,
-          createdAt: formatDistanceToNow(new Date(), {
-            addSuffix: true,
-            locale: vi,
-          }),
+          createdAt: "a few second ago",
+          // formatDistanceToNow(new Date(), {
+          //   addSuffix: true,
+          //   locale: vi,
+          // }),
           receiverId: currentUserInfo._id,
           senderId: senderEmail,
         },
@@ -182,18 +193,72 @@ const ChatWindow = ({ onClose, friend }) => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+  ///rèactor
 
+  const fetchChatList = async () => {
+    setLoading(true);
+    try {
+      const data = await getChatWithUser(friend?._id, page);
+      // setMessages(data.reverse());
+      if (data.length === 0) {
+        setHasMore(false);
+      }
+      data.reverse();
+      setMessages((prev) => [...data, ...prev]);
+    } catch (error) {
+      console.error("Failed to fetch chats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const fetchOlderMessages = async () => {
+    setLoading(true);
+    await new Promise((resolve) => setTimeout(resolve, 600)); // fake delay
+    await fetchChatList();
+    setPage(1);
+    setLoading(false);
+    scrollToBottom();
+  };
+  const handleScroll = () => {
+    const nextPage = page + 1;
+    const container = messageBoxRef.current;
+    if (container.scrollTop === 0 && hasMore && !loading) {
+      prevScrollHeightRef.current = container.scrollHeight;
+      fetchChatList();
+      setPage(nextPage);
+    }
+  };
+
+  useLayoutEffect(() => {
+    // if (loading) {
+    //   const container = messageBoxRef.current;
+    //   const newScrollHeight = container.scrollHeight;
+    //   container.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+    //   console.log(messages);
+    // }
+    //add
+    if (!loading && prevScrollHeightRef.current && messages.length > 0) {
+      const container = messageBoxRef.current;
+      const newScrollHeight = container.scrollHeight;
+      container.scrollTop = newScrollHeight - prevScrollHeightRef.current;
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    fetchOlderMessages();
+    // fetchChatList();
+    // setPage(1);
+  }, []);
   return (
     <>
       {!isCallAccepted && (
         <>
           <Box
-            ref={scrollContainerRef}
             component={Paper}
             elevation={6}
             sx={{
               position: "fixed",
-              right: 50,
+              right: "1rem",
               bottom: 20,
               width: 420,
               maxHeight: 550,
@@ -215,9 +280,10 @@ const ChatWindow = ({ onClose, friend }) => {
                 display: "flex",
                 justifyContent: "space-between",
                 alignItems: "center",
-                padding: 1.5,
+                padding: 1,
                 borderBottom: "1px solid #ddd",
-                backgroundColor: "#f8f9fa",
+                backgroundColor: "#fff",
+                borderRadius: "1rem",
               }}
             >
               <Box display="flex" alignItems="center">
@@ -257,13 +323,24 @@ const ChatWindow = ({ onClose, friend }) => {
             </Box>
 
             {/* Messages Section */}
+            {loading && (
+              <Box sx={{ textAlign: "center", mb: 1 }}>
+                <CircularProgress size={20} />
+              </Box>
+            )}
+            {!hasMore && (
+              <Box sx={{ textAlign: "center", mb: 1, mt: 1 }}>
+                <Typography>No more messages to display</Typography>
+              </Box>
+            )}
             <Box
+              ref={messageBoxRef}
               onScroll={handleScroll}
               sx={{
                 flex: 1,
                 overflowY: "auto",
                 padding: 2,
-                backgroundColor: "#f0f2f5",
+                backgroundColor: "#f0f0f0",
                 scrollBehavior: "smooth",
               }}
             >
@@ -318,6 +395,7 @@ const ChatWindow = ({ onClose, friend }) => {
             {/* Input Section */}
             <Box
               sx={{
+                borderRadius: "1rem",
                 display: "flex",
                 alignItems: "center",
                 padding: 1.5,
@@ -327,7 +405,7 @@ const ChatWindow = ({ onClose, friend }) => {
             >
               <Input
                 fullWidth
-                placeholder="Nhập tin nhắn..."
+                placeholder="Typing message..."
                 // value={newMessage}
                 // onChange={(e) => setNewMessage(e.target.value)}
                 inputRef={newMessage}
@@ -336,7 +414,7 @@ const ChatWindow = ({ onClose, friend }) => {
                 variant="outlined"
                 sx={{
                   marginRight: 1,
-                  borderRadius: "20px",
+
                   backgroundColor: "#f8f9fa",
                   "& .MuiOutlinedInput-root": {
                     borderRadius: "20px",

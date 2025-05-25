@@ -3,7 +3,7 @@ const User = require("../models/User"); // Mô hình người dùng
 const Friendship = require("../models/Friendship");
 const moment = require("moment");
 const Notification = require("../models/Notification");
-const { emitEventToUser } = require("../socket");
+const { emitEventToUser } = require("../socketIO/socket");
 // Gửi tin nhắn
 exports.sendMessage = async (req, res) => {
   try {
@@ -84,23 +84,39 @@ exports.getMessages = async (req, res) => {
         { senderId: userId, receiverId: currentUserId },
       ],
     })
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .skip(parseInt(page) * parseInt(limit))
       .limit(parseInt(limit));
 
+    // const formattedMessages = messages.map((message) => {
+    //   let formatTime = moment(message.createdAt).fromNow();
+    //   // if (message.senderId.toString() === currentUserId) {
+    //   //   formatTime = moment(message.createdAt).fromNow();
+    //   // } else {
+    //   //   formatTime = moment(message.createdAt).format("YYYY-MM-DD");
+    //   // }
+    //   return {
+    //     ...message.toObject(),
+    //     createdAt: formatTime, // moment(message.createdAt).fromNow() , // Định dạng ngày giờ
+    //   };
+    // });
     const formattedMessages = messages.map((message) => {
+      const now = moment();
+      const created = moment(message.createdAt);
+      const diffInDays = now.diff(created, "days");
+
       let formatTime;
-      if (message.senderId.toString() === currentUserId) {
-        formatTime = moment(message.createdAt).fromNow();
+      if (diffInDays >= 1) {
+        formatTime = created.format("YYYY-MM-DD HH:mm");
       } else {
-        formatTime = moment(message.createdAt).format("YYYY-MM-DD");
+        formatTime = created.fromNow();
       }
+
       return {
         ...message.toObject(),
         createdAt: formatTime, // moment(message.createdAt).fromNow() , // Định dạng ngày giờ
       };
     });
-
     res.status(200).json(formattedMessages);
   } catch (error) {
     console.error(error);

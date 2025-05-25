@@ -15,9 +15,9 @@ import {
   getChatWithUser,
   sendMessage,
 } from "~/services/chatServices/chatService";
-import { CurrentUser, useGlobalContext } from "~/context/GlobalContext";
-import { VideoCall } from "@mui/icons-material";
 
+import { VideoCall } from "@mui/icons-material";
+import { CurrentUser, useGlobalContext } from "~/context/GlobalContext";
 import { SocketContext } from "~/context/SocketContext";
 import IsUserActive from "~/components/Elements/IsUserActive";
 import { VideoCallContext } from "~/context/VideoCallContext";
@@ -98,8 +98,9 @@ const ChatWindow = ({ onClose, friend }) => {
     // socket.emit("register", currentUserInfo?._id);
     fetchChatList();
   }, []); // Chỉ chạy khi component được mount///handle scroll
+  const container = scrollContainerRef.current;
+
   const handleScroll = async () => {
-    const container = scrollContainerRef.current;
     if (!container || isFetching || container.scrollTop > 200) return;
 
     setIsFetching(true);
@@ -147,7 +148,6 @@ const ChatWindow = ({ onClose, friend }) => {
         receiverId: currentUserInfo._id,
         senderId: currentUserInfo._id,
         __v: 0,
-        _id: "67d19813ec360214c557ec83",
       },
     ]);
     newMessage.current.value = "";
@@ -188,6 +188,7 @@ const ChatWindow = ({ onClose, friend }) => {
       {!isCallAccepted && (
         <>
           <Box
+            ref={scrollContainerRef}
             component={Paper}
             elevation={6}
             sx={{
@@ -257,7 +258,6 @@ const ChatWindow = ({ onClose, friend }) => {
 
             {/* Messages Section */}
             <Box
-              ref={scrollContainerRef}
               onScroll={handleScroll}
               sx={{
                 flex: 1,

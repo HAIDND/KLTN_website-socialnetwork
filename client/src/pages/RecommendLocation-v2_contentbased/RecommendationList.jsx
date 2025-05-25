@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { ThumbUp, ThumbDown, ChatBubbleOutline } from "@mui/icons-material";
 import { useRecommend } from "./RecommendContext";
-import { getRecommend } from "~/api/RecommendAPI";
+import { getRecommend } from "~/utils/RecommendAPI";
 
 const RecommendationList = () => {
   const { state, dispatch } = useRecommend();

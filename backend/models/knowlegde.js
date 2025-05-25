@@ -1,7 +1,5 @@
 const mongoose = require("mongoose");
-const { removeVietnameseTones } = require("../util");
-
-  
+const { removeVietnameseTones } = require("../utils/util");
 
 const knowledgeSchema = new mongoose.Schema({
   question: {

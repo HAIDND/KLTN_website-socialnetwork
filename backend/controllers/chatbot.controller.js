@@ -1,7 +1,10 @@
 const KnowledgeModel = require("../models/knowlegde");
 const chatbotRepo = require("../repositories/chatgpt.repo");
 const stringSimilarity = require("string-similarity");
-const { removeVietnameseTones, generateFlexibleRegex } = require("../util");
+const {
+  removeVietnameseTones,
+  generateFlexibleRegex,
+} = require("../utils/util");
 
 const chatbotController = {
   createResponse: async (req, res) => {

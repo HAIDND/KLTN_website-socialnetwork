@@ -270,7 +270,7 @@ function groupChat(io, socket) {
       senderId,
       senderId,
       senderName,
-      timestamp,
+      createdAt: "a few second ago",
     });
 
     console.log(`[Group ${groupId}] ${senderName}: ${message}`);

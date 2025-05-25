@@ -2,10 +2,8 @@ import { Close, Send } from "@mui/icons-material";
 import {
   Avatar,
   Box,
-  CircularProgress,
   Divider,
   IconButton,
-  Input,
   Paper,
   TextField,
   Typography,
@@ -24,23 +22,24 @@ import socket from "~/context/SocketInitial";
 import { getGroupMessage, postGroupMessage } from "./groupChatService";
 
 function GroupChat() {
-  const { currentUserInfo } = useContext(CurrentUser);
-
-  //old
-  const { id } = useParams();
-
-  const newMessage = useRef("");
-  const messagesEndRef = useRef(null);
-  const messageBoxRef = useRef(null);
+  const chatRef = useRef(null);
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [newMessage, setNewMessage] = useState("");
+  const { currentUserInfo } = useContext(CurrentUser);
+  const topMessageRef = useRef(null);
+  const observer = useRef();
   const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const { id } = useParams();
+  const [page, setPage] = useState(0); // Trang bắt đầu từ 0
   const prevScrollHeightRef = useRef(0);
-  const [page, setPage] = useState(0);
   // Load ban đầu
   useEffect(() => {
+    setPage(0);
+    setMessages([]);
+    setHasMore(true);
     const initLoad = async () => {
-      const data = await getGroupMessage(id, page, 10);
+      const data = await getGroupMessage(id, page, 5);
       console.log("data", data);
       setMessages(Array.isArray(data) ? data : []);
       scrollToBottom(); // Scroll xuống tin mới nhất
@@ -51,7 +50,7 @@ function GroupChat() {
   const fetchChatList = async () => {
     setLoading(true);
     try {
-      const data = await getGroupMessage(id, page);
+      const data = await getGroupMessage(id, nextPage);
       // setMessages(data.reverse());
       if (data.length === 0) {
         setHasMore(false);
@@ -64,81 +63,64 @@ function GroupChat() {
       setLoading(false);
     }
   };
-  const handleScroll = async () => {
-    const nextPage = page + 1;
-    const container = messageBoxRef.current;
-    if (container.scrollTop === 0 && hasMore && !loading) {
-      prevScrollHeightRef.current = container.scrollHeight;
-      await fetchChatList(id, nextPage);
-      setPage(nextPage);
-    }
-  };
   // Tải thêm khi scroll tới đầu
-  // useEffect(() => {
-  //   if (loadingMore || !hasMore) return;
-  //   if (observer.current) observer.current.disconnect();
-  //   observer.current = new IntersectionObserver(
-  //     async (entries) => {
-  //       if (entries[0].isIntersecting) {
-  //         setLoadingMore(true);
-  //         const container = chatRef.current;
-  //         const previousScrollHeight = container.scrollHeight;
-  //         const nextPage = page + 1;
-  //         const more = await getGroupMessage(id, nextPage);
-  //         if (more.length === 0) {
-  //           setHasMore(false);
-  //         } else {
-  //           setMessages((prev) => [...more, ...prev]);
-  //           setPage(nextPage);
-  //           // Giữ nguyên vị trí cuộn
-  //           setTimeout(() => {
-  //             const newScrollHeight = container.scrollHeight;
-  //             container.scrollTop =
-  //               newScrollHeight - previousScrollHeight + 400;
-  //           }, 100);
-  //         }
-  //         setLoadingMore(false);
-  //       }
-  //     },
-  //     {
-  //       root: chatRef.current,
-  //       threshold: 0.1,
-  //     }
-  //   );
-  //   if (topMessageRef.current) {
-  //     observer.current.observe(topMessageRef.current);
-  //   }
-  // }, [messages, page, hasMore, loadingMore]);
-  //efect mout socket
   useEffect(() => {
-    async () => {
-      await fetchChatList();
-    };
-  }, []);
-  // Scroll xuống cuối
-  function scrollToBottom() {
-    if (messagesEndRef.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth", top: 200 });
+    if (loadingMore || !hasMore) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(
+      async (entries) => {
+        if (entries[0].isIntersecting) {
+          setLoadingMore(true);
+          const container = chatRef.current;
+          const previousScrollHeight = container.scrollHeight;
+          const nextPage = page + 1;
+          const more = await getGroupMessage(id, nextPage);
+          if (more.length === 0) {
+            setHasMore(false);
+          } else {
+            setMessages((prev) => [...more, ...prev]);
+            setPage(nextPage);
+            // Giữ nguyên vị trí cuộn
+            setTimeout(() => {
+              const newScrollHeight = container.scrollHeight;
+              container.scrollTop = newScrollHeight - previousScrollHeight;
+            }, 100);
+          }
+          setLoadingMore(false);
+        }
+      },
+      {
+        root: chatRef.current,
+        threshold: 0.1,
+      }
+    );
+    if (topMessageRef.current) {
+      observer.current.observe(topMessageRef.current);
     }
-  }
+  }, [messages, page, hasMore, loadingMore]);
+  // Scroll xuống cuối
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      if (chatRef.current) {
+        chatRef.current.scrollTop = chatRef.current.scrollHeight;
+      }
+    }, 100);
+  };
   useEffect(() => {
     socket.emit("joinOrCreateGroupRoom", {
       groupId: id,
       memberId: currentUserInfo?.email,
     });
     // Nghe nhận tin nhắn realtime
-    socket.on(
-      "groupChat",
-      ({ groupId, message, senderName, senderId, createdAt }) => {
-        if (senderId !== currentUserInfo?.email) {
-          notifiSound.play();
-        }
-        setMessages((prev) => [
-          ...prev,
-          { senderId, message, senderName, createdAt },
-        ]);
+    socket.on("groupChat", ({ groupId, message, senderName, senderId }) => {
+      if (senderId !== currentUserInfo?.email) {
+        notifiSound.play();
       }
-    );
+      setMessages((prev) => [
+        ...prev,
+        { senderId, message, senderName, createdAt: "a few second ago" },
+      ]);
+    });
     return () => {
       socket.off("groupChat");
       socket.emit("leaveRoom", {
@@ -155,6 +137,7 @@ function GroupChat() {
       message: newMessage,
       senderId: currentUserInfo?.email,
       senderName: currentUserInfo?.username,
+      createdAt: "a few second ago",
     });
     await postGroupMessage({
       senderAvatar: currentUserInfo?.avatar,
@@ -166,8 +149,8 @@ function GroupChat() {
     setNewMessage("");
   };
   useLayoutEffect(() => {
-    if (!loading && prevScrollHeightRef.current && messages.length > 0) {
-      const container = messageBoxRef.current;
+    if (!loadingMore && prevScrollHeightRef.current && messages.length > 0) {
+      const container = chatRef.current;
       const newScrollHeight = container.scrollHeight;
       container.scrollTop = newScrollHeight - prevScrollHeightRef.current;
     }
@@ -183,7 +166,6 @@ function GroupChat() {
           borderColor: "divider",
           height: "85vh",
           position: "fixed",
-          backgroundColor: "#f0f0f0",
         }}
       >
         <Box
@@ -200,32 +182,17 @@ function GroupChat() {
           </IconButton>
         </Box>
         <Divider />
-        {/* Messages */}{" "}
-        {loading && (
-          <Box sx={{ textAlign: "center", mb: 1 }}>
-            <CircularProgress size={20} />
-          </Box>
-        )}
-        {!hasMore && (
-          <Box
-            sx={{
-              textAlign: "center",
 
-              backgroundColor: "#ffffff",
-            }}
-          >
-            <Typography>No more messages to display</Typography>
-          </Box>
-        )}
+        {/* Messages */}
         <Box
-          ref={messageBoxRef}
-          onScroll={handleScroll}
+          ref={chatRef}
           sx={{
             flex: 1,
             overflowY: "auto",
-            padding: 2,
-            backgroundColor: "#ffffff",
-            scrollBehavior: "smooth",
+            p: 2,
+            display: "flex",
+            flexDirection: "column",
+            gap: 1,
           }}
         >
           {messages.length > 0 &&
@@ -234,9 +201,10 @@ function GroupChat() {
               return (
                 <Box
                   key={idx}
-                  // ref={idx === 0 ? topMessageRef : null} // Theo dõi tin đầu tiên
+                  ref={idx === 0 ? topMessageRef : null} // Theo dõi tin đầu tiên
                   sx={{
                     display: "flex",
+
                     justifyContent: isOwnMessage ? "flex-end" : "flex-start",
                   }}
                 >
@@ -273,8 +241,9 @@ function GroupChat() {
                 </Box>
               );
             })}
-          <div ref={messagesEndRef} />
+          {/* <Box sx={{ paddingBottom:  }}></Box> */}
         </Box>
+
         {/* Chat Input */}
         <Box
           component="form"
@@ -290,28 +259,17 @@ function GroupChat() {
             gap: 1,
           }}
         >
-          <Input
-            fullWidth
-            placeholder="Typing message..."
-            // value={newMessage}
-            // onChange={(e) => setNewMessage(e.target.value)}
-            inputRef={newMessage}
-            // onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
+          <TextField
             size="small"
-            variant="outlined"
-            sx={{
-              marginRight: 1,
-
-              backgroundColor: "#f8f9fa",
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "20px",
-              },
-            }}
+            fullWidth
+            placeholder="Type a message..."
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
           />
           <IconButton
             type="submit"
             color="primary"
-            // disabled={!newMessage.trim()}
+            disabled={!newMessage.trim()}
           >
             <Send />
           </IconButton>

@@ -7,23 +7,33 @@ import {
   Avatar,
   Typography,
   Rating,
+  useTheme,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+
 import { useEffect, useState } from "react";
-import { postForGetRecommend } from "./RecommendService";
+import { useNavigate } from "react-router-dom";
+
+import { getRecommendCollaborate } from "~/utils/RecommendAPI";
 function RecommendExtension() {
   const [recommendations, setRecommendations] = useState([]);
+  const theme = useTheme(); // Truy cập theme
   useEffect(() => {
-    postForGetRecommend(
-      JSON.parse(localStorage.getItem("optionRecommend"))
-    ).then((data) => {
-      if (data) {
-        console.log("effect mouted data loca");
-        setRecommendations(data.recommendations);
-      } else {
-        console.log("No list friend");
+    const fetchRecommendations = async () => {
+      try {
+        const res = await getRecommendCollaborate();
+        if (res) {
+          console.log("effect mounted data loca", res);
+          const data = res.recommendations.filter((i) => i.locationInfo);
+          setRecommendations(data);
+        } else {
+          console.log("No list friend");
+        }
+      } catch (error) {
+        console.error("Failed to fetch recommendations:", error);
       }
-    });
+    };
+
+    fetchRecommendations();
   }, []);
   if (recommendations.length < 1) return null;
   return (
@@ -31,22 +41,20 @@ function RecommendExtension() {
       sx={{
         display: "flex",
         flexDirection: "column",
-
+        gap: theme.spacing(2),
+        width: 360,
+        padding: theme.spacing(3),
+        backgroundColor: theme.palette.background.paper,
+        borderRadius: theme.shape.borderRadius,
+        boxShadow: theme.shadows[3],
+        maxWidth: 300,
+        ml: theme.spacing(7),
         mb: 3,
         mt: 3,
-        position: "absolute",
-        left: 1250,
-        top: 450,
-        height: "100vh",
-        overflowY: "auto",
-        background: "##fff",
-        borderRadius: "2rem",
-        boxShadow: 5,
-        maxWidth: "330px",
       }}
     >
       <Typography variant="h5" sx={{ textAlign: "center" }} color="primary">
-        Gợi ý du lịch
+        Travel recommendations
       </Typography>
 
       <List>
@@ -59,6 +67,10 @@ function RecommendExtension() {
 }
 export default RecommendExtension;
 function RecommendationItem({ item }) {
+  const navigate = useNavigate();
+  const handleItemClick = (item) => {
+    navigate("/recommendpage", { state: { item } });
+  };
   return (
     <ListItem
       sx={{
@@ -66,22 +78,23 @@ function RecommendationItem({ item }) {
         alignItems: "flex-start",
         cursor: "pointer",
       }}
+      onClick={() => handleItemClick(item)}
     >
       <ListItemAvatar>
         <Avatar
-          alt={item["Tên địa điểm"]}
-          src={item["Ảnh"]}
+          alt={item?.locationInfo?.imageUrl}
+          src={item?.locationInfo?.imageUrl}
           sx={{ width: 60, height: 60, mr: 2 }}
         />
       </ListItemAvatar>
       <ListItemText
         primary={
-          <Typography fontWeight="bold">{item["Tên địa điểm"]}</Typography>
+          <Typography fontWeight="bold">{item?.locationInfo?.name}</Typography>
         }
         secondary={
           <>
             <Rating
-              value={parseFloat(item["Đánh giá"])}
+              value={parseFloat(item?.locationInfo?.rating)}
               precision={0.1}
               readOnly
               size="small"
@@ -91,7 +104,7 @@ function RecommendationItem({ item }) {
               sx={{ display: "block", mt: 0.5 }}
               color="text.secondary"
             >
-              {item["Mô tả"].slice(0, 90)}...
+              {item?.locationInfo?.description.slice(0, 90)}...
             </Typography>
           </>
         }

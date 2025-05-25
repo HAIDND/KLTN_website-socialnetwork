@@ -3,7 +3,7 @@ import { API_BASE_URL } from "~/config/apiConfig";
 let fetchController = null;
 
 // GET: Lấy tin nhắn theo groupId
-export const getGroupMessage = async (groupId, page = 0, limit = 5) => {
+export const getGroupMessage = async (groupId, page = 0, limit = 10) => {
   // Hủy yêu cầu cũ nếu có
   if (fetchController) {
     fetchController.abort();

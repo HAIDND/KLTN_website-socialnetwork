@@ -16,17 +16,33 @@ import { useRecommend } from "./RecommendContext";
 import RatingInLocation from "./RatingInLocation";
 import RatingLocation from "./RatingLocation";
 import { getRatingInLocation } from "./RecommendService";
+import { useLocation } from "react-router-dom";
+import { getRecommendContent } from "~/utils/RecommendAPI";
 
 export default function CurrentPlace() {
-  const { state } = useRecommend();
+  const { state, dispatch } = useRecommend();
   const [isShowRatings, setShowRatings] = useState(false);
   const [currentRating, setCurrentRating] = useState();
+  const location = useLocation();
+  const item = location.state?.item?.locationInfo;
+  console.log(item);
+
   function handleShowRatings() {
     setShowRatings(!isShowRatings);
   }
   useEffect(() => {
+    const fetchItem = async () => {
+      if (item) {
+        const data = await getRecommendContent(item?.id);
+        dispatch({
+          type: "recommend/clickLocation",
+          payload: { current: item, recommendContent: data?.recommendations },
+        });
+      }
+    };
+    fetchItem();
     setShowRatings(false);
-  }, [state.currentPlace]);
+  }, [state.currentPlace, item]);
   if (!state.currentPlace) return <></>;
 
   const rating =

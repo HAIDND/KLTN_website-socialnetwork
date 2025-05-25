@@ -27,7 +27,7 @@ const getChatList = async () => {
 };
 
 // Route lấy tin nhắn giữa hai người dùng router.get('/messages/:userId', authenticate, getMessages);
-const getChatWithUser = async (userId, page = 1, limit = 5) => {
+const getChatWithUser = async (userId, page = 1, limit = 10) => {
   // Lấy dữ liệu từ sessionStorage
   const storedToken = sessionStorage.getItem("jwt");
   // Parse JSON thành object

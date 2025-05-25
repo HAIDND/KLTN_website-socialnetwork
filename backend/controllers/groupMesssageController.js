@@ -1,5 +1,5 @@
 const GroupMessage = require("../models/GroupMessage");
-
+const moment = require("moment");
 exports.getGroupMessage = async (req, res) => {
   console.log("getGroupMessage", req.params.groupId);
   const { groupId } = req.params;
@@ -24,8 +24,25 @@ exports.getGroupMessage = async (req, res) => {
 
     //   messages = [emptyMessage];
     // }
+    const formattedMessages = messages.map((message) => {
+      const now = moment();
+      const created = moment(message.createdAt);
+      const diffInDays = now.diff(created, "days");
 
-    res.json(messages.reverse()); // đảo thứ tự để client hiển thị đúng thời gian
+      let formatTime;
+      if (diffInDays >= 1) {
+        formatTime = created.format("YYYY-MM-DD HH:mm");
+      } else {
+        formatTime = created.fromNow();
+      }
+
+      return {
+        ...message.toObject(),
+        createdAt: formatTime, // moment(message.createdAt).fromNow() , // Định dạng ngày giờ
+      };
+    });
+    res.status(200).json(formattedMessages.reverse());
+    // res.json(messages.reverse()); // đảo thứ tự để client hiển thị đúng thời gian
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to load messages", error: err });

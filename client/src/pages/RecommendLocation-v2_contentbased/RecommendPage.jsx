@@ -4,7 +4,7 @@ import RecommendationList from "./RecommendationList";
 import { postForGetRecommend } from "./RecommendService";
 import { useEffect, useState } from "react";
 import { RecommendContext, useRecommend } from "./RecommendContext";
-import { getRecommend } from "~/api/RecommendAPI";
+import { getRecommend } from "~/utils/RecommendAPI";
 
 // const recommendations = [
 //   {

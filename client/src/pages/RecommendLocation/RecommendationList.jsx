@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { ThumbUp, ThumbDown, ChatBubbleOutline } from "@mui/icons-material";
 import { useRecommend } from "./RecommendContext";
-import { getRecommendContent } from "~/api/RecommendAPI";
+import { getRecommendContent } from "~/utils/RecommendAPI";
 import IsLoadingAction from "~/components/Elements/IsLoadingAction";
 import RatingLocation from "./RatingLocation";
 import CurrentPlace from "./CurrentPlace";
