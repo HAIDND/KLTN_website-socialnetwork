@@ -27,11 +27,14 @@
 const dotenv = require("dotenv");
 dotenv.config();
 const mongoose = require("mongoose");
-const User = require("../models/User");
-const googleAuthRoute = require("express").Router();
+const express = require("express");
+const googleAuthRoute = express.Router();
 const { OAuth2Client } = require("google-auth-library");
+const jwt = require("jsonwebtoken");
 // Google OAuth Client
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+//add
+const User = require("../models/User");
 // googleAuthRoute.post("/:groupId", getGroupMessage); // Lấy tin nhắn của nhóm ko auth
 googleAuthRoute.post("/auth", async (req, res) => {
   const { token } = req.body;
@@ -43,33 +46,31 @@ googleAuthRoute.post("/auth", async (req, res) => {
 
     const payload = ticket.getPayload();
     const { sub, email, name, picture } = payload;
-    const newUser = new User({
-      username,
-      email,
-      password: hashedPassword,
-      avatar,
-      dateOfBirth,
-      gender,
-      phone,
-      role,
-    });
+    // const newUser = new User({
+    //   username: name,
+    //   email: email,
+    //   avatar: picture,
+    //   authType: "google",
+    // });
 
-    await newUser.save();
+    // await newUser.save();
     let user = await User.findOne({ email });
     if (!user) {
       user = await User.create({
-        email,
-        name,
-        picture,
-        googleId: sub,
+        username: name,
+        email: email,
+        avatar: picture,
+        authType: "google",
+        // email,
+        // name,
+        // picture,
       });
     }
-
     const jwtToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
-    res.json({ token: jwtToken, user });
+    res.json({ token: jwtToken, userId: user._id });
   } catch (err) {
     console.error("Google login error:", err);
     res.status(400).json({ error: "Login failed" });

@@ -7,8 +7,14 @@ import {
 import { Button } from "@mui/material";
 import { postRequestGoogleLogin } from "~/utils/googleAuthServices";
 
-export function GoogleRegister() {
-  const handleLoginSuccess = postRequestGoogleLogin;
+export function GoogleRegister({ hanldeAuthInfo }) {
+  //const handleLoginSuccess = postRequestGoogleLogin;
+
+  async function handleLoginSuccess(credentialResponse) {
+    const res = await postRequestGoogleLogin(credentialResponse);
+    await hanldeAuthInfo(res);
+  }
+  // console.log(handleLoginSuccess);
   const id =
     "585906774881-ngbaaqsrej1640q06krlbic8u3f1j5d9.apps.googleusercontent.com";
   //  thay id bang auth client id

@@ -26,8 +26,9 @@ const googleAuthRoute = require("./utils/googleAuth.route");
 dotenv.config();
 //âsad
 const corsOptions = {
-  origin: "http://localhost:5173" || process.env.CORS_ORIGIN,
-  // origin: "http://localhost:5173", // URL của frontend
+  //origin: process.env.CORS_ORIGIN,
+  origin: "http://localhost:5173",
+  // // URL của frontend  " http://localhost:5173" ||
   credentials: true, // Cho phép cookie
 };
 // Kết nối tới MongoDB

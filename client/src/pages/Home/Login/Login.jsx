@@ -13,7 +13,7 @@ import { CurrentUser } from "../../../context/GlobalContext";
 import { readUser } from "../../../services/userServices/userService";
 // import socket from "~/context/socket";
 import { SocketContext } from "~/context/SocketContext";
-import { GoogleRegister } from "~/components/Elements/GoogleAuth";
+import { GoogleRegister } from "~/components/Elements/GoogleRegister";
 
 export default function Login() {
   const { LoginSocket } = useContext(SocketContext);
@@ -27,6 +27,23 @@ export default function Login() {
     redirectToReferrer: false,
   });
 
+  function hanldeAuthInfo(data) {
+    readUser(data.userId).then((info) => {
+      if (info) {
+        LoginSocket(info.email);
+        setCurrentUserInfo(info);
+      } else {
+        console.log("No profile");
+      }
+    });
+    auth.authenticate(data, () => {
+      setValues((prev) => ({
+        ...prev,
+        error: "",
+        redirectToReferrer: true,
+      }));
+    });
+  }
   const clickSubmit = (e) => {
     e.preventDefault(); // Ngăn chặn reload nếu dùng <form>
 
@@ -37,22 +54,18 @@ export default function Login() {
 
     login(user)
       .then((data) => {
-        if (!data) throw new Error("Lỗi không xác định từ máy chủ.");
+        if (!data) throw new Error("Error from server.");
         if (data.message) {
           setValues((prev) => ({ ...prev, error: data.message }));
         } else {
           setCurrentUser(data);
-          //connect to server
-          // socket.connect();
-          // socket.emit("userLogin", data.userId);
-
           //read user data
           readUser(data.userId).then((sss) => {
             if (sss) {
               LoginSocket(sss.email);
               setCurrentUserInfo(sss);
             } else {
-              alert("No profile");
+              console.log("No profile");
             }
           });
           auth.authenticate(data, () => {
@@ -66,9 +79,6 @@ export default function Login() {
       })
       .catch((err) => setValues((prev) => ({ ...prev, error: err.message })));
   };
-  console.log(currentUser);
-
-  console.log(currentUserInfo);
   if (values.redirectToReferrer) {
     return <Navigate to="/home" />;
   }
@@ -102,7 +112,7 @@ export default function Login() {
           Social
         </Typography>
         <Typography variant="body1" sx={{ color: "#606770", fontSize: 18 }}>
-          giúp bạn kết nối và chia sẻ với mọi người trong cuộc sống của bạn.
+          helps you connect and share with people around the world
         </Typography>
       </Box>
       <Box
@@ -117,7 +127,7 @@ export default function Login() {
         }}
       >
         <TextField
-          label="Email hoặc số điện thoại"
+          label="Email"
           name="email"
           type="email"
           value={values.email}
@@ -129,7 +139,7 @@ export default function Login() {
           sx={{ mb: 2 }}
         />
         <TextField
-          label="Mật khẩu"
+          label="Password"
           name="password"
           type="password"
           value={values.password}
@@ -161,7 +171,7 @@ export default function Login() {
           Login
         </Button>
         <Box>
-          <GoogleRegister></GoogleRegister>
+          <GoogleRegister hanldeAuthInfo={hanldeAuthInfo} />
         </Box>
       </Box>
     </Box>

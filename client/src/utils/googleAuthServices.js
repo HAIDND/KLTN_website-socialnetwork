@@ -1,3 +1,5 @@
+import auth from "~/services/authService/authHelper";
+
 export const postRequestGoogleLogin = async (credentialResponse) => {
   try {
     const res = await fetch("http://localhost:4000/api/google/auth", {
@@ -16,7 +18,8 @@ export const postRequestGoogleLogin = async (credentialResponse) => {
 
     const data = await res.json();
     console.log("Đăng nhập thành công:", data);
-
+    auth.authenticate(data, () => {});
+    return data;
     // Lưu token nếu cần
     // localStorage.setItem("token", data.token);
   } catch (err) {
