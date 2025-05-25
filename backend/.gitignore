@@ -1,5 +1,5 @@
 # remove libraries
 /node_modules/
 # remove enviroment file
-.env
+
 #remove config 
